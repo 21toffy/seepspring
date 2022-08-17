@@ -1,25 +1,7 @@
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, renderer_classes
-
-from accounts.models import CustomUser
-from banks.models import NigerianBanks
-
-from django.db import transaction
+from  banks.models import NigerianBanks
 
 
-
-
-
-@api_view(('GET',))
-def home_page(request):
-    users = CustomUser.objects.all()
-    return Response({"message":"Hello World!, I think the DB was set up properly"})
-
-
-
-@api_view(('GET',))
-def populate_banks(request):
-    bank_codes = {
+bank_codes = {
   "Access Bank": "044",
   "Access Bank (Diamond)": "063",
   "ALAT by WEMA": "035A",
@@ -65,13 +47,16 @@ def populate_banks(request):
   "Wema Bank": "035",
   "Zenith Bank": "057"
 }
-    with transaction.atomic():
-        try:
-            for bank, code in bank_codes.items():
-                NigerianBanks.objects.create(
-                    bank_name = bank,
-                    bank_code = code
-                )
-        except Exception as ex:
-            return Response({"message":str(ex)}, 400)
-        return Response({"message":"banks populated fully"}, 200)
+
+
+for bank, code in bank_codes.items():
+    NigerianBanks.objects.create(
+        bank_name = bank,
+        bank_code = code
+    )
+
+print("finished")
+
+
+
+

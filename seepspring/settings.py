@@ -53,7 +53,8 @@ INSTALLED_APPS = [
     #custom apps
 
     'accounts',
-    'common'
+    'common',
+    'banks'
 ]
 
 MIDDLEWARE = [
