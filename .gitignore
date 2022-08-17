@@ -1,0 +1,17 @@
+.vscode
+node_modules/
+venv/
+env/
+.env
+envs/
+logs/*
+app.sh
+envs
+logs
+debug.log
+Dockerfile
+migrations/*
+migrations/
+__pycache__/
+*.pyc
+.idea/
