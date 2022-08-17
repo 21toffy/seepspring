@@ -8,4 +8,3 @@ from accounts.models import CustomUser
 def home_page(request):
     users = CustomUser.objects.all()
     return Response({"message":"Hello World!, I think the DB was set up properly"})
-
