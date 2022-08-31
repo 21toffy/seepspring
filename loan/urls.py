@@ -1,0 +1,23 @@
+
+from django.urls import path
+from .views import (
+    ActiveLoanListView,
+    InterestBreakdownView,
+    GuarnteeListView,
+HomePageListView,
+RepaymentGuideListView,
+
+)
+
+app_name = 'loan'
+urlpatterns = [
+    path('active-loans-list', ActiveLoanListView.as_view(), name = 'active_loans'),
+    path('interest-breakdown-view', InterestBreakdownView.as_view(), name = 'active_loans'),
+    path('our-guarantee-list', GuarnteeListView.as_view(), name = 'our_guarantee_list'),
+    path('homepage-list', HomePageListView.as_view(), name = 'homepage_list'),
+    path('repayment-guide-list', RepaymentGuideListView.as_view(), name = 'repayment_guide_list'),
+
+]
+
+
+# HomePageListView RepaymentGuideListView

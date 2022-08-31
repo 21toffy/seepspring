@@ -8,7 +8,7 @@ urlpatterns = [
     path('api/v1/', include('accounts.urls')),
     path('', home_page, name="home-page"),
     path('populate', populate_banks, name="populate-banks"),
-    path('api/v1/nigerian-banks/', include("banks.urls"))
-
+    path('api/v1/nigerian-banks/', include("banks.urls")),
+    path('api/v1/loans/', include("loan.urls"))
 
 ]

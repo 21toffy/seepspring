@@ -3,9 +3,11 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics
-
+from django.db.models import Q
 
 from django.db import transaction
+
+from loan.models import Interest, UserLoan
 
 
 from .serializers import (
@@ -24,6 +26,9 @@ from .serializers import (
     ColleagueContactCreationSerializer,
     BankAccountDetailsCreationSerializer,
     UserSerializer,
+
+    UserLoanserializer,
+LoanInterestSerializer,
 
 )
 
@@ -229,17 +234,11 @@ class UserProfileAPIView(APIView):
     serializer_class = LogoutSerializer
     permission_classes = (IsAuthenticated,)
 
-
-
     def get(self, request, *args, **kwargs):
         return self.get_user(request, *args, **kwargs)
     
     def get_user(self, request,*args,**kwargs):
-
         user = CustomUser.objects.filter(id = self.request.user.id).first()
-
-
-
         _UserEmploymentDuration = UserEmploymentDuration.objects.filter(user = request.user).first()
         _UserSalaryRange = UserSalaryRange.objects.filter(user = request.user).first()
         _Employmentinformation = Employmentinformation.objects.filter(user = request.user).first()
@@ -263,5 +262,59 @@ class UserProfileAPIView(APIView):
 
 
 
+class UserLoanProfileAPIView(APIView):
+    # serializer_class = LogoutSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            available_loan = UserLoan.objects.filter(
+                Q(paid=False) |
+                Q(active=False) |
+                Q(user=request.user)).first()
+            loan_interest = Interest.objects.filter(id = available_loan.interest.id).first()
+        except AttributeError:
+            response = {
+            'status': 'success',
+            'code': status.HTTP_200_OK,
+            'message': 'use loan profile fetched successfully',
+            'data': {"loan_status":{"eligible_to_collect_loan": False}},
+            }
+            return Response(response, status=status.HTTP_200_OK)
+
+        if available_loan:
+            user_loan_dictionary = {
+                "loan_status":{"eligible_to_collect_loan": False},
+                 "user":available_loan.user.id,
+                 "id":available_loan.id,
+                "loan_request_status":available_loan.loan_request_status,
+                "amount_requested":available_loan.amount_requested,
+                "amount_disbursed":available_loan.amount_disbursed,
+                "loan_date":available_loan.loan_date,
+                "loan_due_date":available_loan.loan_due_date,
+                "interest":{
+                            "id":loan_interest.id,
+                            "vat":loan_interest.vat,
+                            "service_charge":loan_interest.service_charge,
+                            "interest":loan_interest.interest,
+                }
+            }
+
+            response = {
+            'status': 'success',
+            'code': status.HTTP_200_OK,
+            'message': 'user loan profile fetched successfully',
+            'data': user_loan_dictionary,
+            }
+
+            return Response(response, status=status.HTTP_200_OK)
+        else:
+            response = {
+            'status': 'success',
+            'code': status.HTTP_200_OK,
+            'message': 'use loan profile fetched successfully',
+            'data': {"loan_status":available_loan.get_loan_default_details},
+            }
+            return Response(response, status=status.HTTP_200_OK)
 
 

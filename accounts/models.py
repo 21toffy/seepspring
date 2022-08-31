@@ -1,11 +1,14 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from common.models import BaseModel
+# from loan.models import UserLoan
 from .managers import CustomUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
+from common import constants
+from django.db.models import Q
 
 
 from .managers import CustomUserManager
@@ -21,10 +24,6 @@ def validate_mobile_num(value):
             _("%(value)s is not a valid Phone number"),
             params={"value": value},
         )
-
-
-
-
 
 class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     choice_gender = (                          #private attributes
@@ -48,14 +47,43 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
 
-    image = models.URLField(max_length = 250, null=True, blank = True)
-
+    user_level = models.IntegerField(
+                editable=False,
+                default=constants.LEVEL_1,
+                choices=constants.LEVEL_CHOICES)
+    image = models.URLField(max_length=250, null=True, blank=True)
 
     is_staff = models.BooleanField(default=False)
     USERNAME_FIELD = 'phone_number'
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
+
+    # @property
+    # def get_loan_eligibility(self,):
+    #     UserLoan.objects.filter(
+    #         # (user=self.id) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.DISBURSED) |
+    #         # Q(loan_request_status=constants.LATE) |
+    #         # Q(loan_request_status=constants.PART_SETTLEMENT) |
+    #         Q(paid=False) |
+    #         Q(active=False) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         # Q(loan_request_status=constants.PENDING) |
+    #         )
+    #     return 200
 
     @property
     def full_name(self):

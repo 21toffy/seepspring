@@ -2,6 +2,7 @@
 from django.urls import path
 from .views import (
     ChangePasswordView,
+    UserLoanProfileAPIView,
     UserProfileAPIView,
     UserRegistration,
     EmploymentDurationListView,
@@ -29,7 +30,11 @@ urlpatterns = [
 
     # path("change-password/<uuid:pk>", ChangePasswordView.as_view(), name="change-password")
     path("change-password", ChangePasswordView.as_view(), name="change-password"),
-    path("me", UserProfileAPIView.as_view(), name="profile")
+    path("me", UserProfileAPIView.as_view(), name="profile"),
+    path("loan-profile", UserLoanProfileAPIView.as_view(), name="loan-profile")
+
+
+    
 
 
 

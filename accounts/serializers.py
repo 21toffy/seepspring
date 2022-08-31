@@ -1,3 +1,4 @@
+from loan.models import Interest, UserLoan
 from .models import (
 CustomUser,
 EmploymentDuration,
@@ -15,6 +16,14 @@ from rest_framework import serializers
 from django.contrib import auth
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth.hashers import check_password
+
+
+
+class GetuserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+
+
 
 
 
@@ -353,6 +362,26 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
+class UserLoanserializer(serializers.ModelSerializer):
+    model = UserLoan
+    fields = (
+        "user",
+        "loan_request_status",
+        "amount_requested",
+        "amount_disbursed",
+        "loan_date",
+        "loan_due_date",
+        "interest"
+
+    )
+
+class LoanInterestSerializer(serializers.ModelSerializer):
+    model = Interest
+    fields = (
+        "vat",
+        "service_charge",
+        "interest",
+    )
 
 
 # class ChangePasswordSerializer(serializers.ModelSerializer):
