@@ -1,4 +1,3 @@
-from tkinter.tix import Tree
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 from rest_framework.views import APIView
