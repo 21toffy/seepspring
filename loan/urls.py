@@ -5,7 +5,9 @@ from .views import (
     InterestBreakdownView,
     GuarnteeListView,
 HomePageListView,
+    LoanPurposeListView,
 RepaymentGuideListView,
+RequestLoan
 
 )
 
@@ -16,6 +18,13 @@ urlpatterns = [
     path('our-guarantee-list', GuarnteeListView.as_view(), name = 'our_guarantee_list'),
     path('homepage-list', HomePageListView.as_view(), name = 'homepage_list'),
     path('repayment-guide-list', RepaymentGuideListView.as_view(), name = 'repayment_guide_list'),
+    path('loan-purpose-list', LoanPurposeListView.as_view(), name = 'loan_purpose_list'),
+    path('request-for-loan', RequestLoan.as_view(), name='request-for-loan'),
+
+
+    
+
+    
 
 ]
 

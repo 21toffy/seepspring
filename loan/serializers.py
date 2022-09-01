@@ -1,9 +1,29 @@
-from .models import (Interest, InterestBreakdown, UserLoan, HomePagePromotion, Guarntee,
+from dataclasses import fields
+
+from common import constants
+from .models import (Interest, InterestBreakdown, LoanPurpose, UserLoan, HomePagePromotion, Guarntee,
 RepaymentGuide,)
 from rest_framework import serializers
 
 
 
+class loanPurposeserializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoanPurpose
+        fields= ["id", "purpose"]
+
+
+
+class LoanRequestSerializer(serializers.Serializer):
+    loan_purpose = serializers.UUIDField()
+    interest = serializers.UUIDField()
+    amount = serializers.DecimalField(default=0.0, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
+    class Meta:
+        fields= [
+            "loan_purpose",
+            "interest",
+            "amount",
+        ]
 
 
 class RepaymentGuideSerializer(serializers.ModelSerializer):

@@ -1,9 +1,12 @@
+from decimal import *
 from django.db import models
 from accounts.models import CustomUser
 from common.models import BaseModel
 from common import constants
 import datetime
 from django.utils import timezone
+
+from common.utils import float_to_decimal
 
 
 
@@ -55,6 +58,8 @@ class Guarntee(BaseModel):
 
 class LoanPurpose(BaseModel):
     purpose = models.CharField(max_length=300, null=True, blank=True)
+    active = models.BooleanField(default=False)
+
 
 
 
@@ -106,8 +111,8 @@ class UserLoan(BaseModel):
     interest = models.ForeignKey(Interest, on_delete=models.CASCADE, null=True)
     loan_level = models.ForeignKey(LoanLevel, on_delete=models.CASCADE)
     paid = models.BooleanField(default=False)
-    amount_requested = models.DecimalField(default=0.0, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
-    amount_disbursed = models.DecimalField(default=0.0, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
+    amount_requested = models.DecimalField(default=0.00, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
+    amount_disbursed = models.DecimalField(default=0.00, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
 
     payment_confirmation_status = models.BooleanField(default=False)
     paid_ontime = models.BooleanField(default=False)
@@ -120,37 +125,26 @@ class UserLoan(BaseModel):
 
     load_default_status = models.BooleanField(default=False)
     number_of_default_days = models.IntegerField(default=0)
-    amount_left = models.DecimalField(default=0.0, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
+    amount_left = models.DecimalField(default=0.00, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
     def __str__(self):
         return str(self.user) + " is owing? " + str(self.get_loan_default_details["eligible_to_collect_loan"])
 
     def save(self, *args, **kwargs):
-        print(self.id,333333)
+        self.loan_date = timezone.now()
         if not self.id:
-            print(1)
-            self.loan_date = timezone.now()
-            print(2)
-            # self.loan_due_date = timezone.now().date()self.loan_date + datetime.timedelta(days=self.loan_level.days_tenure)
-
             self.loan_due_date = self.loan_date + datetime.timedelta(days=self.loan_level.days_tenure)
-            print(3)
-            company_percentage = self.amount_disbursed = self.interest.vat + self.interest.service_charge + self.interest.interest
-            print(4)
+            company_percentage = self.interest.vat + self.interest.service_charge + self.interest.interest
             self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100
-            print(5)
-
-        # self.loan_due_date = timezone.now().date() + datetime.timedelta(days=self.loan_level.days_tenure)
-        self.loan_due_date = self.loan_date  + datetime.timedelta(days=self.loan_level.days_tenure)
-
-        company_percentage = self.amount_disbursed = self.interest.vat + self.interest.service_charge + self.interest.interest
-        self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100
-        print(44444444444444)
+        self.loan_due_date = self.loan_date+datetime.timedelta(days = self.loan_level.days_tenure)
+        company_percentage = self.interest.vat + self.interest.service_charge+self.interest.interest
+        self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100   
         return super(UserLoan, self).save(*args, **kwargs)
+
 
     @property
     def get_loan_default_details(self,):
         todays_date = datetime.date.today()
-        if self.active and self.paid and todays_date > self.loan_due_date:
+        if self.active and not self.paid and todays_date > self.loan_due_date:
             default_delta = todays_date - self.loan_due_date
             default_days = default_delta.days
             return {
@@ -165,7 +159,7 @@ class UserLoan(BaseModel):
 
 class LoanRepayment(BaseModel):
     user_loan = models.ForeignKey(UserLoan, on_delete=models.CASCADE, null=True)
-    amount = models.DecimalField(default=0.0, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
+    amount = models.DecimalField(default=0.00, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
     repayment_date = models.DateTimeField(auto_now_add=True)
     transaction_refernce = models.CharField(max_length=255)
     repayment_date = models.DateTimeField(auto_now_add=True)

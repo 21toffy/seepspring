@@ -1,19 +1,89 @@
+from datetime import datetime
 from django.shortcuts import render
-from .models import (Interest, InterestBreakdown, UserLoan, HomePagePromotion, Guarntee,
+from .models import (Interest, InterestBreakdown, LoanLevel, LoanPurpose, UserLoan, HomePagePromotion, Guarntee,
 RepaymentGuide,
 )
-from .serializers import (RepaymentGuideSerializer, UserLoanserializer, InterestBreakdownSerializer, InterestSerializer, RepaymentGuideSerializer,
+from .serializers import (LoanRequestSerializer, RepaymentGuideSerializer, UserLoanserializer, InterestBreakdownSerializer, InterestSerializer, RepaymentGuideSerializer,
 HomePagePromotionSerializer,
 GuarnteeSerializer,
+loanPurposeserializer,
 )
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import (IsAuthenticated,AllowAny)
+from decimal import *
+from django.db import transaction
+
 
 
 # Create your views here.
+
+
+class RequestLoan(APIView):
+    # serializer_class = GuarnteeSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_loan_eligibility_details(self,):
+        with transaction.atomic():
+            import datetime
+            todays_date = datetime.date.today()
+            loan_exists = UserLoan.objects.filter(active=True, paid=False).first()
+            if loan_exists:
+                default_delta = todays_date - loan_exists.loan_due_date
+                default_days = default_delta.days
+                return False
+            return True
+    def post(self, request, *args, **kwargs):
+        with transaction.atomic():         
+            if self.get_loan_eligibility_details() is True:
+                serializer = LoanRequestSerializer(data=request.data)
+                if serializer.is_valid():
+                    user = request.user
+                    validated_data = serializer.validated_data
+                    loan_purpose = validated_data.get("loan_purpose")
+                    interest = validated_data.get("interest")
+                    amount = validated_data.get("amount")
+                    loan_purpose_obj = LoanPurpose.objects.get(id=loan_purpose)
+                    interest_obj = Interest.objects.filter(id=interest).first()
+                    loan_level_obj = LoanLevel.objects.filter(level=user.user_level).first()
+                    user_loan = UserLoan.objects.create(
+                        loan_purpose = loan_purpose_obj,
+                        user=user,
+                        interest =interest_obj,
+                        loan_level = loan_level_obj,
+                        amount_requested = Decimal(amount) * 100
+                    )
+                    data = {
+                        "id": user_loan.id,
+                        "requested_amount": user_loan.amount_requested/100,
+                        "disbursed_amount": user_loan.amount_disbursed/100,
+                        "due_date": user_loan.loan_due_date,
+                        "purpose": user_loan.loan_purpose.purpose,
+
+                    }
+                    return Response({"message":"success", "data":data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+                else:
+                    return Response(serializer.errors,{"message":"failed", "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)       
+            else:
+                return Response({"message":"You are not eligible for a loan", "data":{}, "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+
+
+
+class LoanPurposeListView(APIView):
+    serializer_class = loanPurposeserializer
+    permission_classes = (IsAuthenticated,)
+    def get(self, request):
+        try:
+            loan_purposes = LoanPurpose.objects.filter(active=True)
+            serializer = self.serializer_class(loan_purposes, many=True)
+            return Response({"message":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            return Response(data={}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 class GuarnteeListView(APIView):
