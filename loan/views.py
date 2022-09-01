@@ -45,9 +45,13 @@ class RequestLoan(APIView):
                     loan_purpose = validated_data.get("loan_purpose")
                     interest = validated_data.get("interest")
                     amount = validated_data.get("amount")
-                    loan_purpose_obj = LoanPurpose.objects.get(id=loan_purpose)
-                    interest_obj = Interest.objects.filter(id=interest).first()
-                    loan_level_obj = LoanLevel.objects.filter(level=user.user_level).first()
+                    try:
+                        loan_purpose_obj = LoanPurpose.objects.get(id=loan_purpose)
+                        interest_obj = Interest.objects.filter(id=interest).first()
+                        loan_level_obj = LoanLevel.objects.filter(level=user.user_level).first()
+                    except Exception as does_not_exist:
+                        return Response (str(does_not_exist),{"message":"failed", "status":status.HTTP_404_NOT_FOUND}, status.HTTP_404_NOT_FOUND) 
+                        
                     user_loan = UserLoan.objects.create(
                         loan_purpose = loan_purpose_obj,
                         user=user,
