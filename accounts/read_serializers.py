@@ -33,11 +33,11 @@ class UserRegistrationGetSerializer(serializers.ModelSerializer):
             "dob",
             "gender",
             "nationality",
-            "city",
+            # "city",
             "bvn",
             "education",
             "marital_status",
-            "current_addres",
+            "current_address",
             "number_of_children",
             "image",
         ]

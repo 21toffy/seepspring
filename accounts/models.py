@@ -25,6 +25,7 @@ def validate_mobile_num(value):
             params={"value": value},
         )
 
+
 class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     choice_gender = (                          #private attributes
           ('Male', 'Male'),
@@ -35,17 +36,27 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
     middle_name = models.CharField(max_length=100, null=True, blank=True)
-    dob = models.DateTimeField(null=True, blank=True)
+    dob = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=10, choices=choice_gender)
     nationality = models.CharField(max_length=100, null=True, blank=True)
     city = models.CharField(max_length=300, null=True, blank=True)
+    lga_of_origin = models.CharField(max_length=300, null=True, blank=True)
+    state_of_origin = models.CharField(max_length=300, null=True, blank=True)
+
     bvn = models.CharField(max_length=100, null=True, blank=True)
     education = models.CharField(max_length=225, null=True, blank=True)
     marital_status = models.CharField(max_length=225, null=True, blank=True)
-    current_addres = models.CharField(max_length=225, null=True, blank=True)
+    current_address = models.CharField(max_length=225, null=True, blank=True)
     number_of_children = models.CharField(max_length=225, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
+    bvn_phone_number = models.CharField(_('phone number'), unique=True, max_length=14, validators=[validate_mobile_num], null=True)
+    bvn_address = models.CharField(max_length=255, null=True, blank=True)
+    address_image_url = models.URLField(max_length=255, null=True, blank=True)
+
+
+
+
 
     user_level = models.IntegerField(
                 editable=False,

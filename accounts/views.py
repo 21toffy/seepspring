@@ -1,3 +1,4 @@
+from tkinter.tix import Tree
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 from rest_framework.views import APIView
@@ -68,7 +69,7 @@ class EmploymentDurationListView(APIView):
     def get(self, request):
         employment_durations = EmploymentDuration.objects.all()
         serializer = self.serializer_class(employment_durations, many=True)
-        return Response({"message":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
     
 class SalaryRangeListView(APIView):
     permission_classes = (AllowAny,)
@@ -77,7 +78,7 @@ class SalaryRangeListView(APIView):
     def get(self, request):
         salary_ranges = SalaryRange.objects.all()
         serializer = self.serializer_class(salary_ranges, many=True)
-        return Response({"message":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
     
 
 
@@ -88,10 +89,37 @@ class SalaryRangeListView(APIView):
 class UserRegistration(APIView):
     permission_classes = (AllowAny,)
     # serializer_class = GlobalAccountListSerializer
+    def bvn_pull(data):
+        mocked=True
+
+        if mocked:
+            data["first_name"] = "john"
+            data["last_name"] = "doe"
+            data["middle_name"] = "middle man"
+            data["gender"] = "male"
+            data["dob"] = "1988-09-09"
+            data["lga_of_origin"] = "lagos-island"
+            data["state_of_origin"] = "Lagos"
+            data["bvn"] = "bvn"
+            data["bvn_phone_number"] = "08023178165"
+            data["bvn_address"] = "john"
+            return data
+        else:
+            #logic for live data
+            pass
+            
+
+
+        # gender, first_name, last_name, middle_name,dob, lga_of_origin, state_of_origin, bvn, bvn_phone_number, bvn_address
+        # email,phone_number, city, education, marital_status, current_address, number_of_children, address_image_url
 
     @transaction.atomic
     def post(self, request, format=None):
+
         user_serializer = UserRegistrationSerializer(data=request.data['personal_information'])
+        # user_serializer = UserRegistrationSerializer(data=self.bvn_pull(request.data["personal_information"]))
+
+        
         employment_serializer = EmploymentinformationCreationSerializer(data=request.data['employment_information'])        
         emergency_contact_serializer = EmergencyContactCreationSerializer(data=request.data['emergency_contact'])
         colleague_contact_serializer = ColleagueContactCreationSerializer(data=request.data['colleague_contact'])        
@@ -112,7 +140,7 @@ class UserRegistration(APIView):
                             colleague_contact_serializer.save(user = personal_information_object)
                             if bank_details_serializer.is_valid():
                                 bank_details_serializer.save(user = personal_information_object)
-                                return Response({"message":"success", "data":user_serializer.data , "status":status.HTTP_201_CREATED}, status=status.HTTP_201_CREATED)
+                                return Response({"detail":"success", "data":user_serializer.data , "status":status.HTTP_201_CREATED}, status=status.HTTP_201_CREATED)
                             else:
                                 personal_information_object.delete()
                                 return Response(bank_details_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -258,7 +286,7 @@ class UserProfileAPIView(APIView):
 
 
         z = {"user_details":user_serializer.data, "eployment_duration":_UserEmploymentDurationCreationSerializer.data, "ralary_range":_UserSalaryRangeCreationSerializer.data, "employment_information":_EmploymentinformationCreationSerializer.data,"emergency_contact":_EmergencyContactCreationSerializer.data, "colleague_contact":_ColleagueContactCreationSerializer.data, "bank_details":_BankAccountDetailsCreationSerializer.data}
-        return Response(data={"message":"user profile", "user":z}, status=status.HTTP_200_OK)
+        return Response(data={"detail":"user profile", "user":z}, status=status.HTTP_200_OK)
 
 
 
