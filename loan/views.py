@@ -1,9 +1,14 @@
 from datetime import datetime
 from django.shortcuts import render
+
+from accounts import serializers
+from common import constants
+from common.utils import todays_date
+import loan
 from .models import (Interest, InterestBreakdown, LoanLevel, LoanPurpose, UserLoan, HomePagePromotion, Guarntee,
 RepaymentGuide,
 )
-from .serializers import (LoanRequestSerializer, RepaymentGuideSerializer, UserLoanserializer, InterestBreakdownSerializer, InterestSerializer, RepaymentGuideSerializer,
+from .serializers import (LoanRepaymentSerializer, LoanRequestSerializer, RepaymentGuideSerializer, UserLoanserializer, InterestBreakdownSerializer, InterestSerializer, RepaymentGuideSerializer,
 HomePagePromotionSerializer,
 GuarnteeSerializer,
 loanPurposeserializer,
@@ -19,6 +24,60 @@ from django.db import transaction
 
 
 # Create your views here.
+
+class RepayLoan(APIView):
+    permission_classes = (IsAuthenticated,)
+    mocked = False
+    def post(self, request, *args, **kwargs):
+        if self.mocked is True:
+            pass
+        else:
+            loan_exists = UserLoan.objects.filter(active=True, paid=False).first()
+            if loan_exists:
+                serializer = LoanRepaymentSerializer(data=request.data)
+                if serializer.is_valid():
+                    repayment_instance = serializer.save()
+                    amount_repayed = repayment_instance.amount
+                    repayment_instance.user_loan = loan_exists
+                    repayment_instance.save()
+                    money_left = loan_exists.amount_left - Decimal(amount_repayed)
+                    loan_exists.amount_left = Decimal(money_left)
+                    if money_left <= 0:
+                        loan_exists.paid = True
+                        loan_exists.active = False
+                        loan_exists.status = constants.SETTLED
+                        loan_exists.save()
+
+                        if todays_date() > loan_exists.loan_due_date and loan_exists.number_of_default_days > 5:
+                            loan_exists.paid_ontime = False
+                            loan_exists.load_default.status =True
+                            loan_exists.save()
+                    else:
+                        loan_exists.status = constants.PART_SETTLEMENT
+                        loan_exists.save()
+                    data = {
+                        "amount_payed" : serializer.validated_data["amount"],
+                        "amount_left": Decimal(0) if money_left <= 0 else money_left,
+                        "details":loan_exists.get_loan_default_details
+                    }
+                    return Response({"detail":"success", "data":data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+                else:
+                    return Response({"detail":serializer.errors, "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+
+            else:
+                return Response({"detail":"You dont have an outstanding loan", "data":{}, "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class RequestLoan(APIView):
@@ -56,7 +115,8 @@ class RequestLoan(APIView):
                         user=user,
                         interest =interest_obj,
                         loan_level = loan_level_obj,
-                        amount_requested = Decimal(amount) * 100
+                        amount_requested = Decimal(amount) * 100,
+                        amount_left = Decimal(amount) * 100
                     )
                     data = {
                         "id": user_loan.id,
@@ -83,8 +143,7 @@ class LoanPurposeListView(APIView):
             serializer = self.serializer_class(loan_purposes, many=True)
             return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
         except Exception as e:
-            print(e)
-            return Response(data={}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"details":str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -98,8 +157,7 @@ class GuarnteeListView(APIView):
             serializer = self.serializer_class(our_guarantee)
             return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
         except Exception as e:
-            print(e)
-            return Response(data={}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"details":str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -113,8 +171,7 @@ class HomePageListView(APIView):
             serializer = HomePagePromotionSerializer(home_page_promotion)
             return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
         except Exception as e:
-            print(e)
-            return Response(data={}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"details":str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -128,8 +185,7 @@ class RepaymentGuideListView(APIView):
             serializer = self.serializer_class(repayment_guide, many=True)
             return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
         except Exception as e:
-            print(e)
-            return Response(data={}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(ata={"details":str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

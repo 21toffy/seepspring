@@ -130,7 +130,7 @@ class UserLoan(BaseModel):
         return str(self.user) + " is owing? " + str(self.get_loan_default_details["eligible_to_collect_loan"])
 
     def save(self, *args, **kwargs):
-        self.loan_date = timezone.now()
+        self.loan_date = timezone.now().date()
         if not self.id:
             self.loan_due_date = self.loan_date + datetime.timedelta(days=self.loan_level.days_tenure)
             company_percentage = self.interest.vat + self.interest.service_charge + self.interest.interest
@@ -143,26 +143,53 @@ class UserLoan(BaseModel):
 
     @property
     def get_loan_default_details(self,):
+        response_data = {}
         todays_date = datetime.date.today()
-        if self.active and not self.paid and todays_date > self.loan_due_date:
-            default_delta = todays_date - self.loan_due_date
-            default_days = default_delta.days
-            return {
-                "eligible_to_collect_loan": False,
-                "loan_date": self.loan_date,
-                "loan_due_date": self.loan_due_date,
-                "number_defaulted_days": default_days,
-            }
+        if self.active and not self.paid:
+            if  todays_date > self.loan_due_date:
+                default_delta = todays_date - self.loan_due_date
+                default_days = default_delta.days
+                return {
+                    "eligible_to_collect_loan": False,
+                    "loan_date": self.loan_date,
+                    "loan_due_date": self.loan_due_date,
+                    "number_defaulted_days": default_days,
+                    "message":"You have an overdue loan, please payback now to avoid a bad credit score"
+                }
+            else:
+                return {
+                    "eligible_to_collect_loan": False,
+                    "loan_date": self.loan_date,
+                    "loan_due_date": self.loan_due_date,
+                    "message":"You have a running loan, please payback in other to qualify for another loan"
+
+                }
+
 
         return {"eligible_to_collect_loan": True}
 
+
+    # @property
+    # def get_loan_default_details(self,):
+    #     todays_date = datetime.date.today()
+    #     if self.active and not self.paid and todays_date > self.loan_due_date:
+    #         default_delta = todays_date - self.loan_due_date
+    #         default_days = default_delta.days
+    #         return {
+    #             "eligible_to_collect_loan": False,
+    #             "loan_date": self.loan_date,
+    #             "loan_due_date": self.loan_due_date,
+    #             "number_defaulted_days": default_days,
+    #         }
+
+    #     return {"eligible_to_collect_loan": True}
 
 class LoanRepayment(BaseModel):
     user_loan = models.ForeignKey(UserLoan, on_delete=models.CASCADE, null=True)
     amount = models.DecimalField(default=0.00, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
     repayment_date = models.DateTimeField(auto_now_add=True)
     transaction_refernce = models.CharField(max_length=255)
-    repayment_date = models.DateTimeField(auto_now_add=True)
+    editable_repayment_date = models.DateTimeField(auto_now=True)
     confirmation_status = models.BooleanField(default=False)
 
 

@@ -55,8 +55,5 @@ for bank, code in bank_codes.items():
         bank_code = code
     )
 
-print("finished")
-
-
 
 

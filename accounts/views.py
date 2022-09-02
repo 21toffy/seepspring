@@ -317,6 +317,7 @@ class UserLoanProfileAPIView(APIView):
                 "loan_request_status":available_loan.loan_request_status,
                 "amount_requested":available_loan.amount_requested,
                 "amount_disbursed":available_loan.amount_disbursed,
+                "amount_owed":available_loan.amount_left,
                 "loan_date":available_loan.loan_date,
                 "loan_due_date":available_loan.loan_due_date,
                 "interest":{

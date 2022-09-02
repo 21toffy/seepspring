@@ -265,8 +265,6 @@ class LoginSerializer(serializers.ModelSerializer[CustomUser]):
     def get_tokens(self, obj):  # type: ignore
         """Get user token."""
         user = CustomUser.objects.get(phone_number=obj.phone_number)
-        # print(user)
-        # print(user.tokens(), 'wow')
         return {'refresh': user.tokens()['refresh'], 'access': user.tokens()['access'], 'id': str(user.id),}
 
     class Meta:
@@ -420,7 +418,6 @@ class LoanInterestSerializer(serializers.ModelSerializer):
 
 #         instance.set_password(validated_data['password'])
 #         instance.save()
-#         print(instance)
 
 #         return instance
 

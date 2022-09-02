@@ -14,3 +14,10 @@ def float_to_decimal(f):
         ctx.prec *= 2
         result = ctx.divide(numerator, denominator)
     return result
+
+
+
+def todays_date():
+    import datetime
+    todays_date = datetime.date.today()
+    return todays_date

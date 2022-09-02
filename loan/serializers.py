@@ -1,11 +1,17 @@
 from dataclasses import fields
 
 from common import constants
-from .models import (Interest, InterestBreakdown, LoanPurpose, UserLoan, HomePagePromotion, Guarntee,
+from .models import (Interest, InterestBreakdown, LoanPurpose, LoanRepayment, UserLoan, HomePagePromotion, Guarntee,
 RepaymentGuide,)
 from rest_framework import serializers
 
 
+
+
+class LoanRepaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoanRepayment
+        fields = ["amount","transaction_refernce"]
 
 class loanPurposeserializer(serializers.ModelSerializer):
     class Meta:
