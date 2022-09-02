@@ -11,3 +11,29 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+
+class Faq(BaseModel):
+    question = models.CharField(null=True, blank=True, max_length=500)
+    answer = models.CharField(null=True, blank=True, max_length=500)
+    active = models.BooleanField(default=False)
+    def __str__(self):
+        return self.question
+
+class ReportChallenge(BaseModel):
+    challenge = models.CharField(null=True, blank=True, max_length=500)
+    solution = models.CharField(null=True, blank=True, max_length=500)
+    active = models.BooleanField(default=False)
+    def __str__(self):
+        return self.challenge
+
+
+class ContactUs(BaseModel):
+    channel = models.CharField(null=True, blank=True, max_length=500)
+    value = models.CharField(null=True, blank=True, max_length=500)
+    active = models.BooleanField(default=False)
+    def __str__(self):
+        return self.channel
+
+
