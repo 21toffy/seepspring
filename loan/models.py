@@ -154,14 +154,14 @@ class UserLoan(BaseModel):
                     "loan_date": self.loan_date,
                     "loan_due_date": self.loan_due_date,
                     "number_defaulted_days": default_days,
-                    "message":"You have an overdue loan, please payback now to avoid a bad credit score"
+                    "details":"You have an overdue loan, please payback now to avoid a bad credit score"
                 }
             else:
                 return {
                     "eligible_to_collect_loan": False,
                     "loan_date": self.loan_date,
                     "loan_due_date": self.loan_due_date,
-                    "message":"You have a running loan, please payback in other to qualify for another loan"
+                    "details":"You have a running loan, please payback in other to qualify for another loan"
 
                 }
 

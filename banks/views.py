@@ -24,5 +24,5 @@ class NigerianBanksListView(APIView):
     def get(self, request):
         nigerian_banks = NigerianBanks.objects.all()
         serializer = self.serializer_class(nigerian_banks, many=True)
-        return Response({"message":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        return Response({"details":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
    

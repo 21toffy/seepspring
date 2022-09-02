@@ -13,7 +13,7 @@ from django.db import transaction
 @api_view(('GET',))
 def home_page(request):
     users = CustomUser.objects.all()
-    return Response({"message":"Hello World!, I think the DB was set up properly"})
+    return Response({"details":"Hello World!, I think the DB was set up properly"})
 
 
 
@@ -73,5 +73,5 @@ def populate_banks(request):
                     bank_code = code
                 )
         except Exception as ex:
-            return Response({"message":str(ex)}, 400)
-        return Response({"message":"banks populated fully"}, 200)
+            return Response({"details":str(ex)}, 400)
+        return Response({"details":"banks populated fully"}, 200)
