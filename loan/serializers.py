@@ -1,5 +1,3 @@
-from dataclasses import fields
-
 from common import constants
 from .models import (Interest, InterestBreakdown, LoanPurpose, LoanRepayment, UserLoan, HomePagePromotion, Guarntee,
 RepaymentGuide,)

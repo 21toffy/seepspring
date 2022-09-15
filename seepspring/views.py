@@ -1,9 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, renderer_classes
-
 from accounts.models import CustomUser
 from banks.models import NigerianBanks
-
 from django.db import transaction
 
 

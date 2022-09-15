@@ -53,13 +53,7 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     bvn_phone_number = models.CharField(_('phone number'), unique=True, max_length=14, validators=[validate_mobile_num], null=True)
     bvn_address = models.CharField(max_length=255, null=True, blank=True)
     address_image_url = models.URLField(max_length=255, null=True, blank=True)
-
-
-
-
-
     user_level = models.IntegerField(
-                editable=False,
                 default=constants.LEVEL_1,
                 choices=constants.LEVEL_CHOICES)
     image = models.URLField(max_length=250, null=True, blank=True)
@@ -70,31 +64,6 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
 
     objects = CustomUserManager()
 
-    # @property
-    # def get_loan_eligibility(self,):
-    #     UserLoan.objects.filter(
-    #         # (user=self.id) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.DISBURSED) |
-    #         # Q(loan_request_status=constants.LATE) |
-    #         # Q(loan_request_status=constants.PART_SETTLEMENT) |
-    #         Q(paid=False) |
-    #         Q(active=False) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         # Q(loan_request_status=constants.PENDING) |
-    #         )
-    #     return 200
 
     @property
     def full_name(self):
