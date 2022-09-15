@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     'common',
     'banks',
     "loan",
-    "admin"
+    "adminapp"
 ]
 
 MIDDLEWARE = [
