@@ -11,7 +11,9 @@ from loan.models import Interest, UserLoan
 
 
 from .serializers import (
+    AdminLoginSerializer,
     ChangePasswordSerializer,
+    GenerateOtpSerializer,
     UserRegistrationSerializer,
     EmploymentDurationCreationSerializer,
     SalaryRangeCreationSerializer,
@@ -56,9 +58,43 @@ BankAccountDetails,
 UserEmploymentDuration,
 UserSalaryRange,
 )
+from rest_framework_simplejwt import views as jwt_views
 
 
-from rest_framework.settings import api_settings
+class CustomToken(jwt_views.TokenObtainPairView): 
+    serializer_class = AdminLoginSerializer
+    token_obtain_pair = jwt_views.TokenObtainPairView.as_view()
+
+
+from rest_framework import exceptions
+from common.utils import (generate_token)
+from django.contrib import auth
+
+class GenerateOtpView(APIView):
+    permission_classes = (AllowAny,)
+    serializer_class = GenerateOtpSerializer
+    def get(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            phone_number = request.data.get('phone_number', '')
+            password = request.data.get('password', '')
+            user = auth.authenticate(phone_number=phone_number, password=password)
+            if not user:
+                raise exceptions.AuthenticationFailed('Invalide credentials, try again')
+            if not user.is_active:
+                raise exceptions.AuthenticationFailed('Account disabled, contact admin')
+            if not user.is_staff:
+                raise exceptions.AuthenticationFailed('Auauthorized to view this')
+            if not user.groups.filter(name="admin"):
+                raise exceptions.AuthenticationFailed('Auauthorized to view this')
+            
+            results = {
+                'otp': generate_token(phone_number)
+            }
+            return Response({"detail":"Token generated successfully, this is a test message", "data":results, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        return Response({"detail":serializer.errors,  "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+        
+    
 
 
 class EmploymentDurationListView(APIView):
@@ -281,9 +317,6 @@ class UserProfileAPIView(APIView):
         _EmergencyContactCreationSerializer = EmergencyContactGetSerializer(_EmergencyContact)
         _ColleagueContactCreationSerializer = ColleagueContactGetSerializer(_ColleagueContact)
         _BankAccountDetailsCreationSerializer = BankAccountDetailsGetSerializer(_BankAccountDetails)
-
-
-
         z = {"user_details":user_serializer.data, "eployment_duration":_UserEmploymentDurationCreationSerializer.data, "ralary_range":_UserSalaryRangeCreationSerializer.data, "employment_information":_EmploymentinformationCreationSerializer.data,"emergency_contact":_EmergencyContactCreationSerializer.data, "colleague_contact":_ColleagueContactCreationSerializer.data, "bank_details":_BankAccountDetailsCreationSerializer.data}
         return Response(data={"detail":"user profile", "user":z}, status=status.HTTP_200_OK)
 

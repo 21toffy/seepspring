@@ -7,12 +7,12 @@ Employmentinformation,
 EmergencyContact,
 ColleagueContact,
 BankAccountDetails,
-
 UserEmploymentDuration,
 UserSalaryRange,
 )
 from rest_framework import serializers
-
+from rest_framework import exceptions
+from common.utils import (generate_token, generateKey)
 from django.contrib import auth
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth.hashers import check_password
@@ -430,3 +430,56 @@ class ChangePasswordSerializer(serializers.Serializer):
     """
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+
+
+
+
+class GenerateOtpSerializer(serializers.ModelSerializer):
+    phone_number = serializers.CharField()
+    password = serializers.CharField(max_length=68, min_length=6, write_only=True)
+    class Meta:
+        model = CustomUser
+        fields = ['phone_number', 'password']
+
+
+
+from seepspring.settings import(
+    OTP_EXPIRY_TIME,
+    SECRET_KEY
+)
+from datetime import datetime
+import pyotp
+from rest_framework.response import Response
+import base64
+class AdminLoginSerializer(serializers.ModelSerializer):
+    phone_number = serializers.CharField(max_length=11, min_length=11)
+    password = serializers.CharField(
+        max_length=68, min_length=6, write_only=True)
+    tokens = serializers.CharField(max_length=68, min_length=8, read_only = True)
+    otp = serializers.IntegerField()
+    class Meta:
+        model = CustomUser
+        fields = ['phone_number', 'password', 'tokens', 'otp']
+        
+    def validate(self, attrs):
+        phone_number = attrs.get('phone_number', '')
+        password = attrs.get('password', '')
+        otp = attrs.get('otp', '')
+        tokens = attrs.get('tokens', '')
+        user = auth.authenticate(phone_number=phone_number, password=password)
+        if not user:
+            raise exceptions.AuthenticationFailed('Invalide credentials, try again')
+        if not user.is_active:
+            raise exceptions.AuthenticationFailed('Account disabled, contact admin')
+
+        keygen = generateKey()
+        key = base64.b32encode(keygen.returnValue(phone_number).encode())  # Generating Key
+        OTP = pyotp.TOTP(key,interval = OTP_EXPIRY_TIME)  # TOTP Model 
+        if OTP.verify(otp):  # Verifying the OTP
+            return {
+                'phone_number': user.phone_number,
+                'tokens': user.tokens()
+            }
+        raise exceptions.AuthenticationFailed("OTP is wrong/expired")
+        
+

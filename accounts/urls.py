@@ -1,7 +1,11 @@
 
 from django.urls import path
+
+from accounts.serializers import AdminLoginSerializer
 from .views import (
     ChangePasswordView,
+    CustomToken,
+    GenerateOtpView,
     UserLoanProfileAPIView,
     UserProfileAPIView,
     UserRegistration,
@@ -31,7 +35,16 @@ urlpatterns = [
     # path("change-password/<uuid:pk>", ChangePasswordView.as_view(), name="change-password")
     path("change-password", ChangePasswordView.as_view(), name="change-password"),
     path("me", UserProfileAPIView.as_view(), name="profile"),
-    path("loan-profile", UserLoanProfileAPIView.as_view(), name="loan-profile")
+    path("loan-profile", UserLoanProfileAPIView.as_view(), name="loan-profile"),
+
+    path("generate", GenerateOtpView.as_view(), name="generate-otp"),
+
+    path("verify-token", CustomToken.as_view(), name="admin-login")
+
+    
+
+
+
 
 
     
