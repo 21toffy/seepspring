@@ -84,11 +84,11 @@ class RequestLoan(APIView):
     # serializer_class = GuarnteeSerializer
     permission_classes = (IsAuthenticated,)
 
-    def get_loan_eligibility_details(self,):
+    def get_loan_eligibility_details(self,user):
         with transaction.atomic():
             import datetime
             todays_date = datetime.date.today()
-            loan_exists = UserLoan.objects.filter(active=True, paid=False).first()
+            loan_exists = UserLoan.objects.filter(user=user, active=True, paid=False).first()
             if loan_exists:
                 default_delta = todays_date - loan_exists.loan_due_date
                 default_days = default_delta.days
@@ -96,7 +96,7 @@ class RequestLoan(APIView):
             return True
     def post(self, request, *args, **kwargs):
         with transaction.atomic():         
-            if self.get_loan_eligibility_details() is True:
+            if self.get_loan_eligibility_details(request.user) is True:
                 serializer = LoanRequestSerializer(data=request.data)
                 if serializer.is_valid():
                     user = request.user
@@ -106,9 +106,6 @@ class RequestLoan(APIView):
                     amount = validated_data.get("amount")
                     if Decimal(amount) > 50000:
                         return Response({"detail":"you are not eligible for a loan above N 50000", "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
-
-
-
                     try:
                         loan_level_obj = LoanLevel.objects.filter(level=user.user_level).first()
                         if Decimal(amount) > loan_level_obj.max_amount :

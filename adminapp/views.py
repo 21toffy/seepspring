@@ -114,7 +114,13 @@ class DebtorsApiView(APIView):
     permission_classes = (IsAuthenticated,)
     mocked = False
     def get(self, request, *args, **kwargs):
-        all_debtors = UserLoan.objects.filter(active = True, paid = False, loan_request_status =constants.DISBURSED)
+        query_param = request.GET.get('query')
+        if query_param is not None:
+            all_debtors = UserLoan.objects.filter(active = True,
+            paid = False,
+            loan_request_status =constants.DISBURSED).filter(Q(user__first_name__icontains=query_param) | Q(user__last_name__icontains=query_param))
+        else:
+            all_debtors = UserLoan.objects.filter(active = True, paid = False, loan_request_status =constants.DISBURSED)
         serializer = serializers.DebtorsListSerializer(all_debtors, many=True)
         return Response({"detail":"success", "status":status.HTTP_200_OK, "data":serializer.data}, status.HTTP_200_OK)
 
@@ -125,6 +131,10 @@ class ApplicationApiView(APIView):
     permission_classes = (IsAuthenticated,)
     mocked = False
     def get(self, request, *args, **kwargs):
-        all_debtors = UserLoan.objects.filter(active = True, paid = False, loan_request_status =constants.PENDING)
-        serializer = serializers.DebtorsListSerializer(all_debtors, many=True)
+        query_param = request.GET.get('query')
+        if query_param is not None:
+            all_applications = UserLoan.objects.filter(active = True, paid = False, loan_request_status =constants.PENDING).filter(Q(user__first_name__icontains=query_param) | Q(user__last_name__icontains=query_param))
+        else:
+            all_applications = UserLoan.objects.filter(active = True, paid = False, loan_request_status =constants.PENDING)
+        serializer = serializers.DebtorsListSerializer(all_applications, many=True)
         return Response({"detail":"success", "status":status.HTTP_200_OK, "data":serializer.data}, status.HTTP_200_OK)

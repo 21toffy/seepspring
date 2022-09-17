@@ -44,6 +44,16 @@ class UserRegistrationGetSerializer(serializers.ModelSerializer):
 
 
 
+class UserDetailsSerializer(serializers.ModelSerializer):
+
+
+    class Meta:
+        model = CustomUser
+
+        exclude = ('created_at', 'date_joined','id','is_active','is_deleted','is_staff','is_superuser','last_login', 'password','updated_at','user_permissions','groups')
+
+
+
 class UserEmploymentDurationGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserEmploymentDuration

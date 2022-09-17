@@ -224,9 +224,9 @@ CELERY_BEAT_SCHEDULE = {
         "task": "seepspring.tasks.sample_task",
         "schedule": timedelta(seconds=1)#crontab(minute="*/1"),
     },
-    # 'update_defaulters_new_balance': {
-    #     'task': 'seepspring.tasks.update_defaulters_new_balance',
-    #     'schedule': timedelta(seconds=1)#crontab(minute="*/1") #crontab(minute=0, hour=0)
+    'update_defaulters_new_balance': {
+        'task': 'seepspring.tasks.update_defaulters_new_balance',
+        'schedule': timedelta(seconds=1)#crontab(minute="*/1") #crontab(minute=0, hour=0)
 
-    # },
+    },
 }

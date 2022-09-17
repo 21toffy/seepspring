@@ -124,10 +124,8 @@ class UserLoan(BaseModel):
     active = models.BooleanField(default=True)
     loan_date = models.DateField(auto_now_add=True)
     loan_due_date = models.DateField(blank=True, null=True)
-
     loan_time = models.TimeField(auto_now_add=True)
     loan_due_time = models.TimeField(blank=True, null=True)
-
     load_default_status = models.BooleanField(default=False)
     number_of_default_days = models.IntegerField(default=0)
     amount_left = models.DecimalField(default=0.00, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
@@ -138,23 +136,16 @@ class UserLoan(BaseModel):
         return str(self.user) + " is owing? " + str(self.get_loan_default_details["eligible_to_collect_loan"])
 
 
-    # #penalty
-    # if yu running on 30% interest rate 2 days outstanding 20 thousannd naira 14 days loan
-    # 30%/14 days = to get interest perday(x) of 20 thousand
-
-
     def save(self, *args, **kwargs):
         self.loan_date = timezone.now().date()
         if not self.id:
             self.loan_due_date = self.loan_date + datetime.timedelta(days=self.loan_level.days_tenure)
             company_percentage = self.interest.vat + self.interest.service_charge + self.interest.interest
             self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100
-            self.amount_requested = self.amount_requested
-        self.loan_due_date = self.loan_date+datetime.timedelta(days = self.loan_level.days_tenure)
+            self.amount_left = self.amount_requested
+        # self.loan_due_date = self.loan_date+datetime.timedelta(days = self.loan_level.days_tenure)
         company_percentage = self.interest.vat + self.interest.service_charge+self.interest.interest
         self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100
-        self.amount_requested = self.amount_requested
-
         return super(UserLoan, self).save(*args, **kwargs)
 
 

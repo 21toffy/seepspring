@@ -1,4 +1,4 @@
-from accounts.read_serializers import UserRegistrationGetSerializer
+from accounts.read_serializers import UserDetailsSerializer, UserRegistrationGetSerializer
 from common import constants
 from accounts.models import (CustomUser)
 from rest_framework import serializers
@@ -41,7 +41,7 @@ class LoanLevelSerializer(serializers.ModelSerializer):
 class DebtorsListSerializer(serializers.ModelSerializer):
     interest = InterestSerializer()
     loan_level = LoanLevelSerializer()
-    user = UserRegistrationGetSerializer()
+    user = UserDetailsSerializer()
    
 
     class Meta:
@@ -51,7 +51,7 @@ class DebtorsListSerializer(serializers.ModelSerializer):
                     "amount_disbursed","loan_date",
                     "loan_due_date","loan_time",
                     "loan_due_time","load_default_status",
-                    "number_of_default_days","amount_left","get_loan_default_details",
+                    "number_of_default_days","amount_left","get_loan_default_details","accumulated_amount"
         
         ]
 
