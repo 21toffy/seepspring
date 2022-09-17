@@ -15,3 +15,21 @@ heroku run bash --app seepspring
 heroku pg:psql postgresql-graceful-47692 --app seepspring
 dont do this
 heroku ps:exec --app=seepspring
+
+
+//starting celery beat
+celery -A seepspring beat -l INFO
+
+
+
+
+//celery beat
+celery -A seepspring beat -l INFO
+
+
+celery -A seepspring.celery worker -l info
+celery worker -A project --loglevel=DEBUG
+
+celery -A app.celery_module.celeryapp worker --loglevel=info
+
+celery -A seepspring.celery.app worker --loglevel=info

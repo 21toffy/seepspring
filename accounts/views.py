@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics
 from django.db.models import Q
-
+from django.contrib.auth.models import Group
 from django.db import transaction
 
 from loan.models import Interest, UserLoan
@@ -73,25 +73,24 @@ from django.contrib import auth
 class GenerateOtpView(APIView):
     permission_classes = (AllowAny,)
     serializer_class = GenerateOtpSerializer
-    def get(self, request):
+    def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             phone_number = request.data.get('phone_number', '')
             password = request.data.get('password', '')
             user = auth.authenticate(phone_number=phone_number, password=password)
             if not user:
-                raise exceptions.AuthenticationFailed('Invalide credentials, try again')
+                raise exceptions.AuthenticationFailed('Invalid credentials, try again')
             if not user.is_active:
                 raise exceptions.AuthenticationFailed('Account disabled, contact admin')
             if not user.is_staff:
                 raise exceptions.AuthenticationFailed('Auauthorized to view this')
             if not user.groups.filter(name="admin"):
                 raise exceptions.AuthenticationFailed('Auauthorized to view this')
-            
             results = {
                 'otp': generate_token(phone_number)
             }
-            return Response({"detail":"Token generated successfully, this is a test message", "data":results, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+            return Response({"auth_status":1,"detail":"Token generated successfully, this is a test message", "data":results, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
         return Response({"detail":serializer.errors,  "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
         
     
@@ -164,6 +163,8 @@ class UserRegistration(APIView):
             if user_serializer.is_valid():
                 with transaction.atomic():
                     personal_information_object = user_serializer.save()
+                    group, created = Group.objects.get_or_create(name="client")
+                    personal_information_object.groups.add(group)
                 if employment_serializer.is_valid():
                     employment_duration_object = EmploymentDuration.objects.filter(id = request.data['eployment_duration_details']["employment_duration"]).first()
                     salary_range_object = SalaryRange.objects.filter(id = request.data['salary_range_details']["salary_range"]).first()

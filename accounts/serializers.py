@@ -468,7 +468,7 @@ class AdminLoginSerializer(serializers.ModelSerializer):
         tokens = attrs.get('tokens', '')
         user = auth.authenticate(phone_number=phone_number, password=password)
         if not user:
-            raise exceptions.AuthenticationFailed('Invalide credentials, try again')
+            raise exceptions.AuthenticationFailed('Invalid credentials, try again')
         if not user.is_active:
             raise exceptions.AuthenticationFailed('Account disabled, contact admin')
 
@@ -478,8 +478,11 @@ class AdminLoginSerializer(serializers.ModelSerializer):
         if OTP.verify(otp):  # Verifying the OTP
             return {
                 'phone_number': user.phone_number,
-                'tokens': user.tokens()
+                'full_name': user.full_name,
+                'first_name': user.first_name,
+                'tokens': user.tokens(),
+                "auth_status":2
             }
-        raise exceptions.AuthenticationFailed("OTP is wrong/expired")
+        raise exceptions.CustomAuthenticationFailed("OTP is wrong/expired")
         
 

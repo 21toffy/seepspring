@@ -47,11 +47,13 @@ INSTALLED_APPS = [
 
     'rest_framework',
     "rest_framework_simplejwt",
+    "corsheaders",
+    'celery',
+    'django_celery_beat',
     # 'drf_yasg'
 
 
     #custom apps
-
     'accounts',
     'common',
     'banks',
@@ -63,6 +65,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -197,3 +200,33 @@ SIMPLE_JWT = {
 
 OTP_EXPIRY_TIME = 300
 
+
+CORS_ALLOW_ALL_ORIGINS = True # If this is used then `CORS_ALLOWED_ORIGINS` will not have any effect
+CORS_ALLOW_CREDENTIALS = True
+
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5335',
+    'https://seepspringfe.heroku.app'
+]
+
+
+CELERY_BROKER_URL = "redis://redis:6379"
+CELERY_RESULT_BACKEND = "redis://redis:6379"
+
+from celery.schedules import crontab
+import seepspring.tasks
+
+CELERY_BEAT_SCHEDULE = {
+    "sample_task": {
+        "task": "seepspring.tasks.sample_task",
+        "schedule": timedelta(seconds=1)#crontab(minute="*/1"),
+    },
+    # 'update_defaulters_new_balance': {
+    #     'task': 'seepspring.tasks.update_defaulters_new_balance',
+    #     'schedule': timedelta(seconds=1)#crontab(minute="*/1") #crontab(minute=0, hour=0)
+
+    # },
+}
