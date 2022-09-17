@@ -436,10 +436,15 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 class GenerateOtpSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField()
-    password = serializers.CharField(max_length=68, min_length=6, write_only=True)
+    password = serializers.CharField(max_length=15, min_length=3, write_only=True)
     class Meta:
         model = CustomUser
         fields = ['phone_number', 'password']
+    # def validate(self, attrs):
+    #     password = attrs.get('password', '')
+
+    #     if password < 6 or password > 12:
+    #         raise exceptions.AuthenticationFailed('password should not be less than 6 or greated than 12')
 
 
 
