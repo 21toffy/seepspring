@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-tk$b%*t*q789$r7*p2w3dy2sd4kzuktr=%3$(+ic@-rfyd_o_o
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1','0.0.0.0', "seepspring.herokuapp.com"]
+ALLOWED_HOSTS = ["*",'127.0.0.1','0.0.0.0', "seepspring.herokuapp.com"]
 
 
 # Application definition
@@ -62,10 +62,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -204,6 +204,10 @@ OTP_EXPIRY_TIME = 300
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+
+CORS_ALLOW_HEADERS = "*"
+
 
 CORS_ALLOWED_ORIGIN_REGEXES = [
     'http://localhost:3000',
