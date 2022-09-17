@@ -204,14 +204,28 @@ OTP_EXPIRY_TIME = 300
 CORS_ALLOW_ALL_ORIGINS = True # If this is used then `CORS_ALLOWED_ORIGINS` will not have any effect
 CORS_ALLOW_CREDENTIALS = True
 
-
-CORS_ALLOWED_ORIGINS = [
+CORS_ALLOWED_ORIGIN_REGEXES = [
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:5335',
     'https://seepspringfe.netlify.app',
-    'https://seepspring.netlify.app'
+    'https://seepspring.netlify.app',
+    'http://seepspringfe.netlify.app',
+    'http://seepspring.netlify.app',
+]
 
+CORS_ORIGIN_WHITELIST = (
+    'https://seepspringfe.netlify.app',
+    'https://seepspring.netlify.app',
+    'http://seepspringfe.netlify.app',
+    'http://seepspring.netlify.app',
+)
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://seepspringfe.netlify.app',
+    'https://seepspring.netlify.app',
+    'http://seepspringfe.netlify.app',
+    'http://seepspring.netlify.app',
 ]
 
 
