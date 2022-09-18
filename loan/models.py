@@ -143,7 +143,7 @@ class UserLoan(BaseModel):
             company_percentage = self.interest.vat + self.interest.service_charge + self.interest.interest
             self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100
             self.amount_left = self.amount_requested
-        # self.loan_due_date = self.loan_date+datetime.timedelta(days = self.loan_level.days_tenure)
+        self.loan_due_date = self.loan_date+datetime.timedelta(days = self.loan_level.days_tenure)
         company_percentage = self.interest.vat + self.interest.service_charge+self.interest.interest
         self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100
         return super(UserLoan, self).save(*args, **kwargs)
