@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-tk$b%*t*q789$r7*p2w3dy2sd4kzuktr=%3$(+ic@-rfyd_o_o
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*",'127.0.0.1','0.0.0.0', "seepspring.herokuapp.com"]
+ALLOWED_HOSTS = ["*",'127.0.0.1','0.0.0.0', "seepspring.herokuapp.com", "seepspringbe.herokuapp.com"]
 
 
 # Application definition
