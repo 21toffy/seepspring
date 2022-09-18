@@ -11,6 +11,9 @@ heroku run bash --app seepspring
 
 
 
+  
+
+
 
 heroku pg:psql postgresql-graceful-47692 --app seepspring
 dont do this
