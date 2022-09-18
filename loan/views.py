@@ -104,8 +104,11 @@ class RequestLoan(APIView):
                     loan_purpose = validated_data.get("loan_purpose")
                     interest = validated_data.get("interest")
                     amount = validated_data.get("amount")
-                    if Decimal(amount) > 50000:
-                        return Response({"detail":"you are not eligible for a loan above N 50000", "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+                    if Decimal(amount) > 5000000:
+                        return Response({"detail":"you are not eligible for a loan above N 50'000", "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+                    if Decimal(amount) < 100000:
+                        return Response({"detail":"you are not eligible for a loan above N 1'000", "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+
                     try:
                         loan_level_obj = LoanLevel.objects.filter(level=user.user_level).first()
                         if Decimal(amount) > loan_level_obj.max_amount :
