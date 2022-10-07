@@ -27,6 +27,72 @@ class GetuserProfileSerializer(serializers.ModelSerializer):
 
 
 
+# class UserRegistrationSerializer(serializers.ModelSerializer):
+
+#     class Meta:
+#         model = CustomUser
+
+#         extra_kwargs = {'password': {'write_only': True}}
+
+#         fields = [
+#             "email",
+#             "password",
+#             "phone_number",
+#             "first_name",
+#             "last_name",
+#             "middle_name",
+#             "dob",
+#             "gender",
+#             "nationality",
+#             "current_address",
+#             "bvn",
+#             "education",
+#             "marital_status",
+#             "number_of_children",
+#             "image",
+#             "address_image_url",
+#             "lga_of_origin",
+#             "state_of_origin",
+#             "bvn_phone_number",
+#             "bvn_address",
+#             # "city"
+#         ]
+#     def create(self, validated_data):
+#         # create user 
+#         user = CustomUser.objects.create(
+#             email = validated_data['email'],
+#             phone_number = validated_data['phone_number'],
+#             first_name = validated_data['first_name']or "",
+#             last_name = validated_data['last_name']or "",
+#             middle_name = validated_data['middle_name'],
+#             dob = validated_data['dob'],
+#             gender = validated_data['gender']or "",
+#             nationality = validated_data['nationality']or "",
+#             # city = validated_data['city'],
+#             bvn = validated_data['bvn'],
+#             education = validated_data['education']or "",
+#             marital_status = validated_data['marital_status']or "",
+#             current_address = validated_data['current_address']or "",
+#             number_of_children = validated_data['number_of_children']or "0",
+#             image = validated_data['image']or "",
+#             address_image_url = validated_data["address_image_url"] or "",
+#             lga_of_origin = validated_data["lga_of_origin"] or "",
+#             state_of_origin = validated_data["state_of_origin"] or "",
+#             bvn_phone_number = validated_data["bvn_phone_number"] or "",
+#             bvn_address = validated_data["bvn_address"] or "",
+        
+#         )
+
+#         if user.password is not None:
+#             user.set_password(validated_data['password'])
+#             user.save()
+        
+#         return user
+
+
+
+
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -38,12 +104,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             "email",
             "password",
             "phone_number",
-            "first_name",
-            "last_name",
-            "middle_name",
-            "dob",
-            "gender",
-            "nationality",
             "current_address",
             "bvn",
             "education",
@@ -51,35 +111,32 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             "number_of_children",
             "image",
             "address_image_url",
-            "lga_of_origin",
-            "state_of_origin",
             "bvn_phone_number",
             "bvn_address",
-            # "city"
         ]
     def create(self, validated_data):
         # create user 
         user = CustomUser.objects.create(
             email = validated_data['email'],
             phone_number = validated_data['phone_number'],
-            first_name = validated_data['first_name']or "",
-            last_name = validated_data['last_name']or "",
-            middle_name = validated_data['middle_name'],
-            dob = validated_data['dob'],
-            gender = validated_data['gender']or "",
-            nationality = validated_data['nationality']or "",
+            first_name = validated_data.get("first_name", "First name"),
+            last_name = validated_data.get("last_name", "Last name"),
+            middle_name = validated_data.get("middle_name", "middle name"),
+            dob = validated_data.get("dob", None),
+            gender = validated_data.get("gender", "Male"),
+            nationality = validated_data.get("nationality", "Nigerian"),
             # city = validated_data['city'],
             bvn = validated_data['bvn'],
             education = validated_data['education']or "",
             marital_status = validated_data['marital_status']or "",
             current_address = validated_data['current_address']or "",
-            number_of_children = validated_data['number_of_children']or "0",
+            number_of_children = validated_data.get("number_of_children", "0"),
             image = validated_data['image']or "",
             address_image_url = validated_data["address_image_url"] or "",
-            lga_of_origin = validated_data["lga_of_origin"] or "",
-            state_of_origin = validated_data["state_of_origin"] or "",
-            bvn_phone_number = validated_data["bvn_phone_number"] or "",
-            bvn_address = validated_data["bvn_address"] or "",
+            lga_of_origin = validated_data.get("lga_of_origin", "Lagos Island"),
+            state_of_origin = validated_data.get("state_of_origin", "Lagos"),
+            bvn_phone_number = validated_data.get("bvn_phone_number", "09098765432"),
+            bvn_address = validated_data.get("bvn_address", "7a ayanleye street egan"),
         
         )
 
@@ -88,6 +145,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             user.save()
         
         return user
+
+
+
 
 
 
@@ -491,3 +551,61 @@ class AdminLoginSerializer(serializers.ModelSerializer):
         raise exceptions.CustomAuthenticationFailed("OTP is wrong/expired")
         
 
+
+
+
+
+# {
+#     "personal_information":{
+#         "email" : "gbadamosi@gmail.com",
+#         "phone_number" : "08011111122",
+#         // "gender" : "Female",
+#         "password":"toffy123",
+#         // "first_name":"Bilikisu",
+#         // "last_name":"Gbadamosi",
+#         // "middle_name":"freeman",
+#         // "dob":"2019-10-19",
+#         // "nationality":"Nigerian",
+#         "bvn":"7429429999",
+#         "education":"university",
+#         "marital_status": "married",
+#         "current_address": "23 jesus street",
+#         "number_of_children": "3",
+#         "image": "https://www.ufebfuebfu.ybf",
+#         // "bvn_phone_number":"08011111122",
+#         // "bvn_address": "54 uhdud street Lagos",
+#         // "lga_of_origin": "lagos island",
+#         // "state_of_origin": "lagos",
+#         "address_image_url":"http://www.ufebfuebfu.ybf"
+#     },
+#     "eployment_duration_details":{
+#         "employment_duration":"618b402a-d294-4b1c-b386-0ab9f50369cb"
+#     },
+#     "salary_range_details":{"salary_range":"b0883fce-833d-4871-92f1-90a71d42b772"},
+
+#     "employment_information":{
+#                     "employment_status":"Unemployed",
+#                     "company_name":"feghas",
+#                     "company_location":"omole phase 1",
+#                     "role":"intern",
+#                     "employee_id_card":"https://www.ufebfuebfu.ybf",
+#                     "bank_statement":"https://www.ufebfuebfu.ybf",
+#                     "employment_duration":"618b402a-d294-4b1c-b386-0ab9f50369cb",
+#                     "salary_range":"9658c8ba-4284-4c87-b64b-b5e54b8cb1cf"
+#                     },
+#     "emergency_contact": {
+#             "relationship":"father",
+#             "name":"My daddy",
+#             "phone_number":"09088777890"
+#     },
+#     "colleague_contact": {
+#             "name":"ayomide",
+#             "phone_number":"08097283838"
+#     },
+#     "bank_details": {
+#             "bank_name":"GT bank",
+#             "account_number": "098392999",
+#             "account_name":"tofunmi okedeji"
+#     }
+                
+# }

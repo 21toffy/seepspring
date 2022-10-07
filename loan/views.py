@@ -112,7 +112,7 @@ class RequestLoan(APIView):
                     try:
                         loan_level_obj = LoanLevel.objects.filter(level=user.user_level).first()
                         if Decimal(amount) > loan_level_obj.max_amount :
-                            return Response({"detail":f"you are not eligible for a loan above N {loan_level_obj.max_amount}", "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+                            return Response({"detail":f"you are not eligible for a loan above N {loan_level_obj.max_amount/100}", "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
 
                         loan_purpose_obj = LoanPurpose.objects.get(id=loan_purpose)
                         interest_obj = Interest.objects.filter(id=interest).first()

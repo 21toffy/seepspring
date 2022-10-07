@@ -41,3 +41,8 @@ def generate_token(phone):
 
     except Exception as e:
         return 12345
+def custom_serializer_error(error):
+    errors = error
+    string = (str(errors))
+    respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1]
+    return respo
