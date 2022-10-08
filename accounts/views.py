@@ -97,7 +97,7 @@ class VerifyAccountNumber(APIView):
             bank_name = data.get("data").get("account_name")
             plartform_name = request.user.full_name
             if name_correlation:
-                return Response({"detail":data["message"], "data":{"status":True, "name":bank_name}, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+                return Response({"detail":data["message"], "data":{"status":True, "name":bank_name.lower()}, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
             return Response({"detail":f"Names miss match, Bank name: {bank_name}, Name on our plartform {plartform_name}","data":{"status":False},"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"detail":str(e),"data":{"status":False},"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
