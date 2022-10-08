@@ -1,7 +1,19 @@
 from common import constants
-from .models import (Interest, InterestBreakdown, LoanPurpose, LoanRepayment, UserLoan, HomePagePromotion, Guarntee,
+from .models import (Interest, InterestBreakdown, LoanLevel, LoanPurpose, LoanRepayment, UserLoan, HomePagePromotion, Guarntee,
 RepaymentGuide,)
 from rest_framework import serializers
+
+
+
+
+
+
+
+class LoanLevelserializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoanLevel
+        fields = ["level","max_amount","days_tenure"]
+
 
 
 

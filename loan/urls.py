@@ -8,7 +8,8 @@ HomePageListView,
     LoanPurposeListView,
     RepayLoan,
 RepaymentGuideListView,
-RequestLoan
+RequestLoan,
+LoanLevelListView
 
 )
 
@@ -22,6 +23,11 @@ urlpatterns = [
     path('loan-purpose-list', LoanPurposeListView.as_view(), name = 'loan_purpose_list'),
     path('request-for-loan', RequestLoan.as_view(), name='request-for-loan'),
     path('repay-loan', RepayLoan.as_view(), name='repay-loan'),
+    path('loan-level', LoanLevelListView.as_view(), name='loan_level'),
+
+
+
+
 
 ]
 

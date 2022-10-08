@@ -8,7 +8,7 @@ import loan
 from .models import (Interest, InterestBreakdown, LoanLevel, LoanPurpose, UserLoan, HomePagePromotion, Guarntee,
 RepaymentGuide,
 )
-from .serializers import (LoanRepaymentSerializer, LoanRequestSerializer, RepaymentGuideSerializer, UserLoanserializer, InterestBreakdownSerializer, InterestSerializer, RepaymentGuideSerializer,
+from .serializers import (LoanLevelserializer, LoanRepaymentSerializer, LoanRequestSerializer, RepaymentGuideSerializer, UserLoanserializer, InterestBreakdownSerializer, InterestSerializer, RepaymentGuideSerializer,
 HomePagePromotionSerializer,
 GuarnteeSerializer,
 loanPurposeserializer,
@@ -24,6 +24,27 @@ from django.db import transaction
 
 
 # Create your views here.
+
+
+class LoanLevelListView(APIView):
+    serializer_class = LoanLevelserializer
+    permission_classes = (IsAuthenticated,)
+    def get(self, request):
+        try:
+            user_level = request.user.user_level
+            print(user_level,111)
+            loan_level = LoanLevel.objects.filter(level = user_level).first()
+            print(loan_level,222)
+
+            serializer = self.serializer_class(loan_level)
+            return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        except Exception as e:
+            return Response(data={"details":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
 
 class RepayLoan(APIView):
     permission_classes = (IsAuthenticated,)
