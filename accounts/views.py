@@ -94,9 +94,11 @@ class VerifyAccountNumber(APIView):
                 return  Response({"detail":data["message"],"data":False,"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
             
             name_correlation = self.resolve_name(data.get("data").get("account_name"), request.user.full_name)
+            plartform_name = data.get("data").get("account_name")
+            bank_name = request.user.full_name
             if name_correlation:
                 return Response({"detail":data["message"], "data":True, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
-            return Response({"detail":"Less than 2 names on bank account match names on Bvn","data":False,"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":f"Names miss match, Bank name: {bank_name}, Name on our plartform{plartform_name}","data":False,"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"detail":str(e),"data":False,"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
             
