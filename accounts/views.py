@@ -69,6 +69,72 @@ class CustomToken(jwt_views.TokenObtainPairView):
 from rest_framework import exceptions
 from common.utils import (generate_token)
 from django.contrib import auth
+import requests
+
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+
+
+class VerifyAccountNumber(APIView):
+    permission_classes = (IsAuthenticated,)
+    def get(self, request):
+        try:
+            account_number = request.data['account_number']
+            bank_code = request.data['bank_code']
+            url = f"https://api.paystack.co/bank/resolve?account_number={account_number}&bank_code={bank_code}"
+            paystack_api_key = os.getenv('PAYSTACK_API_KEY', None)
+            hed = {'Authorization': 'Bearer ' + paystack_api_key}
+            r = requests.get(url, headers=hed)
+            data = r.json()
+            print(data.get("data").get("account_name"))
+
+            if not data["status"]:
+                return  Response({"detail":data["message"],"data":False,"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+            
+            name_correlation = self.resolve_name(data.get("data").get("account_name"), request.user.full_name)
+            if name_correlation:
+                return Response({"detail":data["message"], "data":True, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+            return Response({"detail":"Less than 2 names on bank account match names on Bvn","data":False,"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"detail":str(e),"data":False,"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+            
+
+
+    def resolve_name(self, resolved_name, database_name):
+        resoled_name_array = resolved_name.split()
+        database_name_array = database_name.split()
+        probability = 0
+        for i in resoled_name_array:
+            if i in database_name_array:
+                probability +=1
+        if probability >=2:
+            return True
+        else:
+            return False
+
+
+    # def resolve_name(self, resolved_name, database_name):
+    #     resoled_name_array = resolved_name.lower().split()
+    #     database_name_array = database_name.lower().split()
+    #     probability = 0
+    #     for i in resoled_name_array:
+    #         if i in database_name_array:
+    #             probability +=1
+    #     if probability >=2:
+    #         return True
+    #     else:
+    #         return False
+# {
+#   "status": True,
+#   "message": "Account number resolved",
+#   "data": {
+#     "account_number": "0001234567",
+#     "account_name": "Doe Jane Loren",
+#     "bank_id": 9
+#   }
+# }
 
 class GenerateOtpView(APIView):
     permission_classes = (AllowAny,)

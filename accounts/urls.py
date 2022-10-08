@@ -14,6 +14,7 @@ from .views import (
 
     LoginAPIView,
 LogoutAPIView,
+    VerifyAccountNumber,
 )
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -39,7 +40,11 @@ urlpatterns = [
 
     path("generate", GenerateOtpView.as_view(), name="generate-otp"),
 
-    path("verify-token", CustomToken.as_view(), name="admin-login")
+    path("verify-token", CustomToken.as_view(), name="admin-login"),
+
+
+    path("verify-account-number", VerifyAccountNumber.as_view(), name="verify_account_number")
+
 
     
 
