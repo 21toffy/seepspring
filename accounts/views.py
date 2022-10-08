@@ -91,22 +91,21 @@ class VerifyAccountNumber(APIView):
             print(data.get("data").get("account_name"))
 
             if not data["status"]:
-                return  Response({"detail":data["message"],"data":False,"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+                return  Response({"detail":data["message"],"data":{"status":False},"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
             
             name_correlation = self.resolve_name(data.get("data").get("account_name"), request.user.full_name)
             plartform_name = data.get("data").get("account_name")
             bank_name = request.user.full_name
             if name_correlation:
-                return Response({"detail":data["message"], "data":True, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
-            return Response({"detail":f"Names miss match, Bank name: {bank_name}, Name on our plartform{plartform_name}","data":False,"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+                return Response({"detail":data["message"], "data":{"status":True, "name":bank_name}, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+            return Response({"detail":f"Names miss match, Bank name: {bank_name}, Name on our plartform {plartform_name}","data":{"status":False},"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({"detail":str(e),"data":False,"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":str(e),"data":{"status":False},"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
             
 
-
     def resolve_name(self, resolved_name, database_name):
-        resoled_name_array = resolved_name.split()
-        database_name_array = database_name.split()
+        resoled_name_array = resolved_name.lower().split()
+        database_name_array = database_name.lower().split()
         probability = 0
         for i in resoled_name_array:
             if i in database_name_array:
@@ -115,19 +114,6 @@ class VerifyAccountNumber(APIView):
             return True
         else:
             return False
-
-
-    # def resolve_name(self, resolved_name, database_name):
-    #     resoled_name_array = resolved_name.lower().split()
-    #     database_name_array = database_name.lower().split()
-    #     probability = 0
-    #     for i in resoled_name_array:
-    #         if i in database_name_array:
-    #             probability +=1
-    #     if probability >=2:
-    #         return True
-    #     else:
-    #         return False
 # {
 #   "status": True,
 #   "message": "Account number resolved",
