@@ -133,8 +133,8 @@ class Employmentinformation(BaseModel):
     employee_id_card = models.URLField(max_length = 250, null=True, blank = True)
     bank_statement = models.URLField(max_length = 250, null=True, blank = True)
     
-    employment_duration = models.ForeignKey(EmploymentDuration, on_delete=models.CASCADE, null=True)
-    salary_range = models.ForeignKey(SalaryRange, on_delete=models.CASCADE, null=True)
+    employment_duration = models.ForeignKey(EmploymentDuration, on_delete=models.CASCADE, null=True, blank=True)
+    salary_range = models.ForeignKey(SalaryRange, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return str(self.user) + f": {str(self.employment_status)} {str(self.company_name)} {str(self.role)} {str(self.salary_range)}"
