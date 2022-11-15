@@ -91,10 +91,12 @@ class SendSMS:
             response = requests.post(self.url, json=self.payload, headers=self.get_headers())
             return response.json()
         except Exception as e:
+            print(str(e))
             return  {
                     "data": None,
                     "message": f"Something went wrong {str(e)}",
-                    "status": 400
+                    "status": 400,
+                    "code": 400
                     }
             
 

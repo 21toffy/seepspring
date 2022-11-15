@@ -10,6 +10,8 @@ heroku git:remote -a seepspring
 heroku run bash --app seepspringbe
 
 
+#check logs
+heroku logs --tail --app appName
 
   
 
