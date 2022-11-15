@@ -192,7 +192,7 @@ class SendOTPToPhone(APIView):
                 time_difference = datetime.now() - check_number.updated_at.replace(tzinfo=None)
                 if time_difference  < timedelta(seconds=120):
                     return Response({"detail":wait_two_minutes, "status":"failed"}, status.HTTP_400_BAD_REQUEST)
-                if time_difference > timedelta(seconds=240) and check_number.count < 3:
+                if time_difference > timedelta(seconds=240) and check_number.count > 3:
                     return Response({"detail":wait_4_minutes, "status":"failed"}, status.HTTP_400_BAD_REQUEST)
 
                 send_otp = self.send_sms_logic(built_data)
