@@ -93,7 +93,7 @@ class SendSMS:
         except Exception as e:
             return  {
                     "data": None,
-                    "message": "Something went wrong",
+                    "message": f"Something went wrong {str(e)}",
                     "status": 400
                     }
             
