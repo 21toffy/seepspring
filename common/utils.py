@@ -58,8 +58,8 @@ def generate_four_random_digits() -> int:
     return number
     
 
-def openconfig() -> dict:
-    with open("config.json", "r") as f:
-        config = json.load(f)
-        return config
+# def openconfig() -> dict:
+#     with open("config.json", "r") as f:
+#         config = json.load(f)
+#         return config
 

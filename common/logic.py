@@ -70,16 +70,16 @@ class SendSMS:
 
 
     def get_authorization(self) -> str:
-        config = self.openconfig()
+        # config = self.openconfig()
         # authorization = config["sendchamp"]["authorization"]
         authorization = SENDCHAMP_AUTHORIZATION
 
         return authorization
 
-    def openconfig(self) -> dict:
-        with open("config.json", "r") as f:
-            config = json.load(f)
-            return config
+    # def openconfig(self) -> dict:
+    #     with open("config.json", "r") as f:
+    #         config = json.load(f)
+    #         return config
 
     def get_headers(self) -> dict:
         headers = {"accept": "application/json","content-type": "application/json", "Authorization":"Bearer " + self.get_authorization()}

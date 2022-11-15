@@ -72,7 +72,9 @@ class CustomToken(jwt_views.TokenObtainPairView):
 
 
 from rest_framework import exceptions
-from common.utils import (generate_token, generate_four_random_digits, openconfig)
+from common.utils import (generate_token, generate_four_random_digits,
+# openconfig
+ )
 from django.contrib import auth
 import requests
 
