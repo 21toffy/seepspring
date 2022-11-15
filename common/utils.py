@@ -5,6 +5,10 @@ import base64
 from decimal import *
 from seepspring.settings import (SECRET_KEY, OTP_EXPIRY_TIME)
 
+import json
+import pathlib
+import requests
+
 def float_to_decimal(f):
     "Convert a floating point number to a Decimal with no loss of information"
     n, d = f.as_integer_ratio()
@@ -46,3 +50,16 @@ def custom_serializer_error(error):
     string = (str(errors))
     respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1]
     return respo
+
+
+def generate_four_random_digits() -> int:
+    import random
+    number = random.randint(1111,9999)
+    return number
+    
+
+def openconfig() -> dict:
+    with open("config.json", "r") as f:
+        config = json.load(f)
+        return config
+

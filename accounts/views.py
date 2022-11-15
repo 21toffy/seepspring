@@ -6,9 +6,9 @@ from rest_framework import generics
 from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.db import transaction
+import json
 
 from loan.models import Interest, UserLoan
-
 
 from .serializers import (
     AdminLoginSerializer,
@@ -57,6 +57,8 @@ ColleagueContact,
 BankAccountDetails,
 UserEmploymentDuration,
 UserSalaryRange,
+OtpPhone, validate_mobile_num
+
 )
 from rest_framework_simplejwt import views as jwt_views
 
@@ -67,16 +69,166 @@ class CustomToken(jwt_views.TokenObtainPairView):
 
 
 from rest_framework import exceptions
-from common.utils import (generate_token)
+from common.utils import (generate_token, generate_four_random_digits, openconfig)
 from django.contrib import auth
 import requests
 
 import os
 from dotenv import load_dotenv
 load_dotenv()
+from .messages import *
+from common.logic import (SendSMS, GetBVN)
 
 
 
+
+class ResolveBVN(APIView):   
+    mock = False     
+    def get(self, request, bvn=None):
+        if self.mock == True:
+            with open("./accounts/bvn.json", "r") as f:
+                bvn = json.load(f)
+            return Response({"detail":bvn["entity"]}, status.HTTP_200_OK)
+        else:
+            get_bvn = GetBVN(bvn)
+            try:
+                bvn_request_data = get_bvn.request_bvn()
+            except Exception as e:
+                return Response({"detail":str(e)}, status.HTTP_400_BAD_REQUEST)
+
+            if bvn_request_data.status_code != 200: 
+                print(bvn_request_data.json()["error"], 12345)  
+                return Response({"detail":bvn_request_data.json()["error"]}, status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"detail":bvn_request_data.json()}, status.HTTP_200_OK)
+            
+
+# class ResolveBVN(APIView):        
+#     def get(self, request, bvn=None):
+#         get_bvn = GetBVN(bvn)
+#         try:
+#             bvn_request_data = get_bvn.request_bvn()
+#         except Exception as e:
+#             return Response({"detail":str(e)}, status.HTTP_400_BAD_REQUEST)
+
+#         if bvn_request_data.status_code == 401: 
+#             return Response({"detail":"something went wrong, if issue persist please contact us, thanks"}, status.HTTP_400_BAD_REQUEST)
+#         if bvn_request_data.status_code == 400: 
+#             return Response({"detail":"something went wrong, if issue persist please contact us, thanks"}, status.HTTP_400_BAD_REQUEST)        
+#         else:
+#             return Response({"detail":bvn_request_data.text}, status.HTTP_200_OK)
+        
+
+
+
+
+
+
+class VerifyPhone(APIView):
+    def validate_otp(self, otp):
+        if len(otp)!= 4:
+            raise Exception("Invalid OTP")
+        try:
+            casted = int(otp)
+            return casted
+        except Exception as e:
+            return e
+    def post(self, request):
+        otp = request.data.get("otp", None)
+        phone = request.data.get("phone", None)
+        if otp is None or phone is None:
+            return Response({"detail":f"OTP or Phone can not be empty"}, status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_mobile_num(phone)
+        except Exception as e:
+            return Response({"detail":f"{phone} is not a valid Phone number"}, status.HTTP_400_BAD_REQUEST)
+        try:
+            casted = self.validate_otp(otp)
+        except Exception as e:
+            return Response({"detail":f"{otp} is an invalid OTP"}, status.HTTP_400_BAD_REQUEST)
+        check_numbers = OtpPhone.objects.filter(phone=phone, is_deleted=False)
+        if check_numbers:
+            for check_number in check_numbers:
+                saved_code = check_number.code
+                if saved_code == casted:
+                    check_number.is_deleted=True
+                    check_number.save()
+                    return Response({"detail":otp_match_success}, status.HTTP_200_OK)
+                else:
+                    return Response({"detail":otp_match_failed}, status.HTTP_400_BAD_REQUEST)
+        return Response({"detail":no_otp}, status.HTTP_400_BAD_REQUEST)
+
+class SendOTPToPhone(APIView):
+    mock =False
+    permission_classes = (AllowAny,)
+    def send_sms_logic(self, data):
+        print("trying to initialize class")                      
+        initialize_sending = SendSMS(data)
+        print("send sms method after initializing class")
+        send_otp = initialize_sending.send_otp()
+        return send_otp
+
+    def post(self, request):
+        phone = request.data.get("phone", None)
+        try:
+            validate_mobile_num(phone)
+        except Exception as e:
+            return Response({"detail":f"{phone} is not a valid Phone number"}, status.HTTP_400_BAD_REQUEST)
+
+        random_numbers=generate_four_random_digits()
+        built_data = {
+                    "to": phone,
+                    "message": f"Hello your OTP to create an account with us is {random_numbers}",
+                    "sender_name": openconfig()['sendchamp']['sender_id'],
+                    "route": "non_dnd"
+                    }
+        if phone:
+            check_number = OtpPhone.objects.filter(phone=phone).last()
+            if check_number:
+                from datetime import datetime, timedelta
+                time_difference = datetime.now() - check_number.updated_at.replace(tzinfo=None)
+                if time_difference  < timedelta(seconds=120):
+                    # for i in check_number:
+                    #     i.is_deleted=True
+                    #     i.save()
+                    return Response({"detail":wait_two_minutes}, status.HTTP_400_BAD_REQUEST)
+                if time_difference > timedelta(seconds=240) and check_number.count > 3:
+                    # for i in check_number:
+                    #     i.is_deleted=True
+                    #     i.save()
+                    return Response({"detail":wait_4_minutes}, status.HTTP_400_BAD_REQUEST)
+
+                send_otp = self.send_sms_logic(built_data)
+                check_number.code = random_numbers
+                check_number.count = check_number.count + 1
+                check_number.save()
+
+                if send_otp["code"] != 200:   
+                    return Response({"detail":send_otp["message"]}, status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({"detail":otp_sent_success}, status.HTTP_200_OK)
+
+            else:
+                try:
+                    print("trying to create OTP object")
+                    OtpPhone.objects.create(phone=phone, count=1, code = random_numbers)
+                    print("trying to send sms")
+                    send_otp = self.send_sms_logic(built_data)
+                    if send_otp["status"] != 200:   
+                        if self.mock == True:
+                            return Response({"detail":otp_sent_success}, status.HTTP_200_OK)
+                        return Response({"detail":send_otp["message"]}, status.HTTP_400_BAD_REQUEST)
+                    else:
+                        
+                        return Response({"detail":otp_sent_success}, status.HTTP_200_OK)
+                except Exception as e:
+                    return Response({"detail":str(e)}, status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"detail":"phone number field can not be empty"}, status.HTTP_400_BAD_REQUEST)
+            
+
+
+ 
 class VerifyAccountNumber(APIView):
     permission_classes = (IsAuthenticated,)
     def get(self, request):
@@ -88,8 +240,6 @@ class VerifyAccountNumber(APIView):
             hed = {'Authorization': 'Bearer ' + paystack_api_key}
             r = requests.get(url, headers=hed)
             data = r.json()
-            print(data.get("data").get("account_name"))
-
             if not data["status"]:
                 return  Response({"detail":data["message"],"data":{"status":False},"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
             
@@ -177,9 +327,36 @@ class SalaryRangeListView(APIView):
 class UserRegistration(APIView):
     permission_classes = (AllowAny,)
     # serializer_class = GlobalAccountListSerializer
+
+    @transaction.atomic
+    def post(self,request,*args,**kwargs):
+        us=UserRegistrationSerializer(data=request.data,many=False)
+        if us.is_valid():
+            us.save()
+            return Response(us.data)
+        else:
+            errors = us.errors
+            string = (str(errors))
+            respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1] 
+            res = {"detail": respo, "status": "failed"}
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
+    # def get(self,request,pk):
+    #     book_obj=Book.objects.filter(pk=pk).first()
+    #     bs=BookSerializers(book_obj)
+    #     return Response(bs.data)
+ 
+    # def put(self,request,pk):
+    #     book_obj=Book.objects.filter(pk=pk).first()
+    #              bs=BookSerializers(book_obj,data=request.data)
+    #     if bs.is_valid():
+    #         bs.save()
+    #         return Response(bs.data)
+    #     else:
+    #         return HttpResponse(bs.errors)
+
     def bvn_pull(data):
         mocked=True
-
         if mocked:
             data["first_name"] = "john"
             data["last_name"] = "doe"
@@ -195,69 +372,60 @@ class UserRegistration(APIView):
         else:
             #logic for live data
             pass
-            
 
 
-        # gender, first_name, last_name, middle_name,dob, lga_of_origin, state_of_origin, bvn, bvn_phone_number, bvn_address
-        # email,phone_number, city, education, marital_status, current_address, number_of_children, address_image_url
-
-    @transaction.atomic
-    def post(self, request, format=None):
-
-        user_serializer = UserRegistrationSerializer(data=request.data['personal_information'])
-        # user_serializer = UserRegistrationSerializer(data=self.bvn_pull(request.data["personal_information"]))
-
-        
-        employment_serializer = EmploymentinformationCreationSerializer(data=request.data['employment_information'])        
-        emergency_contact_serializer = EmergencyContactCreationSerializer(data=request.data['emergency_contact'])
-        colleague_contact_serializer = ColleagueContactCreationSerializer(data=request.data['colleague_contact'])        
-        bank_details_serializer = BankAccountDetailsCreationSerializer(data=request.data['bank_details'])
-        try:
-            
-            if user_serializer.is_valid():
-                with transaction.atomic():
-                    personal_information_object = user_serializer.save()
-                    group, created = Group.objects.get_or_create(name="client")
-                    personal_information_object.groups.add(group)
-                if employment_serializer.is_valid():
-                    employment_duration_object = EmploymentDuration.objects.filter(id = request.data['eployment_duration_details']["employment_duration"]).first()
-                    salary_range_object = SalaryRange.objects.filter(id = request.data['salary_range_details']["salary_range"]).first()
+    # def post(self, request, format=None):
+    #     user_serializer = UserRegistrationSerializer(data=request.data['personal_information'])
+    #     # user_serializer = UserRegistrationSerializer(data=self.bvn_pull(request.data["personal_information"]))        
+    #     employment_serializer = EmploymentinformationCreationSerializer(data=request.data['employment_information'])        
+    #     emergency_contact_serializer = EmergencyContactCreationSerializer(data=request.data['emergency_contact'])
+    #     colleague_contact_serializer = ColleagueContactCreationSerializer(data=request.data['colleague_contact'])        
+    #     bank_details_serializer = BankAccountDetailsCreationSerializer(data=request.data['bank_details'])
+    #     try:
+    #         if user_serializer.is_valid():
+    #             with transaction.atomic():
+    #                 personal_information_object = user_serializer.save()
+    #                 group, created = Group.objects.get_or_create(name="client")
+    #                 personal_information_object.groups.add(group)
+    #             if employment_serializer.is_valid():
+    #                 employment_duration_object = EmploymentDuration.objects.filter(id = request.data['eployment_duration_details']["employment_duration"]).first()
+    #                 salary_range_object = SalaryRange.objects.filter(id = request.data['salary_range_details']["salary_range"]).first()
                     
-                    employment_serializer.save(user = personal_information_object, employment_duration  = employment_duration_object , salary_range=salary_range_object )
-                    if emergency_contact_serializer.is_valid():
-                        emergency_contact_serializer.save(user = personal_information_object)   
-                        if colleague_contact_serializer.is_valid():
-                            colleague_contact_serializer.save(user = personal_information_object)
-                            if bank_details_serializer.is_valid():
-                                bank_details_serializer.save(user = personal_information_object)
-                                return Response({"detail":"success", "data":user_serializer.data , "status":status.HTTP_201_CREATED}, status=status.HTTP_201_CREATED)
-                            else:
-                                personal_information_object.delete()
-                                return Response(bank_details_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                        else:
-                            personal_information_object.delete()
-                            return Response(colleague_contact_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                    else:
-                        personal_information_object.delete()
-                        return Response(emergency_contact_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    personal_information_object.delete()
-                    return Response(employment_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                try:
-                    personal_information_object.delete()
-                except:
-                    pass
-                return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except LookupError as ke:
-            try:
-                personal_information_object.delete()
-            except UnboundLocalError:
-                x = str(ke)[1:len(str(ke)) -1 ]
-                return Response({x:[f" {x} can not be empty"]}, status=status.HTTP_400_BAD_REQUEST)
+    #                 employment_serializer.save(user = personal_information_object, employment_duration  = employment_duration_object , salary_range=salary_range_object )
+    #                 if emergency_contact_serializer.is_valid():
+    #                     emergency_contact_serializer.save(user = personal_information_object)   
+    #                     if colleague_contact_serializer.is_valid():
+    #                         colleague_contact_serializer.save(user = personal_information_object)
+    #                         if bank_details_serializer.is_valid():
+    #                             bank_details_serializer.save(user = personal_information_object)
+    #                             return Response({"detail":"success", "data":user_serializer.data , "status":status.HTTP_201_CREATED}, status=status.HTTP_201_CREATED)
+    #                         else:
+    #                             personal_information_object.delete()
+    #                             return Response(bank_details_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #                     else:
+    #                         personal_information_object.delete()
+    #                         return Response(colleague_contact_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #                 else:
+    #                     personal_information_object.delete()
+    #                     return Response(emergency_contact_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #             else:
+    #                 personal_information_object.delete()
+    #                 return Response(employment_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #         else:
+    #             try:
+    #                 personal_information_object.delete()
+    #             except:
+    #                 pass
+    #             return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     except LookupError as ke:
+    #         try:
+    #             personal_information_object.delete()
+    #         except UnboundLocalError:
+    #             x = str(ke)[1:len(str(ke)) -1 ]
+    #             return Response({x:[f" {x} can not be empty"]}, status=status.HTTP_400_BAD_REQUEST)
             
-            x = str(ke)[1:len(str(ke)) -1 ]
-            return Response({x:[f" {x} field can not be empty"]}, status=status.HTTP_400_BAD_REQUEST)
+    #         x = str(ke)[1:len(str(ke)) -1 ]
+    #         return Response({x:[f" {x} field can not be empty"]}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

@@ -11,6 +11,7 @@ BankAccountDetails,
 
 UserEmploymentDuration,
 UserSalaryRange,
+OtpPhone
 
 )
 
@@ -26,4 +27,8 @@ admin.site.register(BankAccountDetails)
 
 
 admin.site.register(UserEmploymentDuration)
+admin.site.register(OtpPhone)
 admin.site.register(UserSalaryRange)
+
+
+

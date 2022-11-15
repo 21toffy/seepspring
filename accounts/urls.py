@@ -11,10 +11,12 @@ from .views import (
     UserRegistration,
     EmploymentDurationListView,
     SalaryRangeListView,
-
+    SendOTPToPhone,
+    ResolveBVN,
     LoginAPIView,
-LogoutAPIView,
+    LogoutAPIView,
     VerifyAccountNumber,
+    VerifyPhone,
 )
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -43,7 +45,21 @@ urlpatterns = [
     path("verify-token", CustomToken.as_view(), name="admin-login"),
 
 
-    path("verify-account-number", VerifyAccountNumber.as_view(), name="verify_account_number")
+    path("verify-account-number", VerifyAccountNumber.as_view(), name="verify_account_number"),
+
+    path("send-otp", SendOTPToPhone.as_view(), name="send_phone_number"),
+
+
+    path("verify-otp", VerifyPhone.as_view(), name="verify_otp"),
+
+    path("fetch-bvn/<str:bvn>", ResolveBVN.as_view(), name="verify_otp")
+
+
+
+
+
+
+    
 
 
     

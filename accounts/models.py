@@ -26,6 +26,22 @@ def validate_mobile_num(value):
         )
 
 
+
+class OtpPhone(BaseModel):
+    phone = models.CharField(_('phone number'), null=True,unique=True, max_length=14, validators=[validate_mobile_num])
+    count = models.IntegerField(default = 0)
+    code = models.IntegerField(default = 0000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
+    active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.phone
+
+
+
+
 class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     choice_gender = (                          #private attributes
           ('Male', 'Male'),
@@ -33,32 +49,36 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     )
     email = models.EmailField(_('email address'), unique=True)
     phone_number = models.CharField(_('phone number'), unique=True, max_length=14, validators=[validate_mobile_num])
+    
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
     middle_name = models.CharField(max_length=100, null=True, blank=True)
-    dob = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=10, choices=choice_gender)
-    nationality = models.CharField(max_length=100, null=True, blank=True)
-    city = models.CharField(max_length=300, null=True, blank=True)
+    dob = models.DateField(null=True, blank=True)
     lga_of_origin = models.CharField(max_length=300, null=True, blank=True)
-    state_of_origin = models.CharField(max_length=300, null=True, blank=True)
-
-    bvn = models.CharField(max_length=100, null=True, blank=True)
-    education = models.CharField(max_length=225, null=True, blank=True)
+    lga_of_residence = models.CharField(max_length=300, null=True, blank=True)
     marital_status = models.CharField(max_length=225, null=True, blank=True)
+    nationality = models.CharField(max_length=100, null=True, blank=True)
+    bvn = models.CharField(max_length=100, null=True, blank=True)
+    bvn_phone_number = models.CharField(_('phone number'), unique=True, max_length=14, validators=[validate_mobile_num], null=True)
+    bvn_address = models.CharField(max_length=255, null=True, blank=True)
+    state_of_origin = models.CharField(max_length=300, null=True, blank=True)
+    state_of_residence = models.CharField(max_length=300, null=True, blank=True)
+
+
+    city = models.CharField(max_length=300, null=True, blank=True)
+    education = models.CharField(max_length=225, null=True, blank=True)
     current_address = models.CharField(max_length=225, null=True, blank=True)
     number_of_children = models.CharField(max_length=225, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
-    bvn_phone_number = models.CharField(_('phone number'), unique=True, max_length=14, validators=[validate_mobile_num], null=True)
-    bvn_address = models.CharField(max_length=255, null=True, blank=True)
     address_image_url = models.URLField(max_length=255, null=True, blank=True)
     user_level = models.IntegerField(
                 default=constants.LEVEL_1,
                 choices=constants.LEVEL_CHOICES)
     image = models.URLField(max_length=250, null=True, blank=True)
-
     is_staff = models.BooleanField(default=False)
+    
     USERNAME_FIELD = 'phone_number'
     REQUIRED_FIELDS = []
 
