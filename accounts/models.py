@@ -60,7 +60,7 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     marital_status = models.CharField(max_length=225, null=True, blank=True)
     nationality = models.CharField(max_length=100, null=True, blank=True)
     bvn = models.CharField(max_length=100, null=True, blank=True)
-    bvn_phone_number = models.CharField(_('phone number'), unique=True, max_length=14, validators=[validate_mobile_num], null=True)
+    bvn_phone_number = models.CharField(_('BVN phone number'), unique=True, max_length=14, validators=[validate_mobile_num], null=True)
     bvn_address = models.CharField(max_length=255, null=True, blank=True)
     state_of_origin = models.CharField(max_length=300, null=True, blank=True)
     state_of_residence = models.CharField(max_length=300, null=True, blank=True)
@@ -107,6 +107,32 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
             'refresh': str(refresh),
             'access': str(refresh.access_token)
         }
+
+class BvnData(BaseModel):
+    user = models.ForeignKey(CustomUser, null=True, blank=True, on_delete=models.CASCADE)
+    bvn = models.CharField(max_length=100, null=True, blank=True)
+    first_name = models.CharField(max_length=100, null=True, blank=True)
+    last_name = models.CharField(max_length=100, null=True, blank=True)
+    middle_name = models.CharField(max_length=100, null=True, blank=True)
+    gender = models.CharField(max_length=10,  null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    phone_number1 = models.CharField(max_length=14, null=True, blank=True)
+    level_of_account = models.CharField(max_length=100, null=True, blank=True)
+    image = models.CharField(max_length=100, null=True, blank=True)
+    lga_of_origin = models.CharField(max_length=300, null=True, blank=True)
+    lga_of_residence = models.CharField(max_length=300, null=True, blank=True)
+    marital_status = models.CharField(max_length=100, null=True, blank=True)
+    name_on_card = models.CharField(max_length=100, null=True, blank=True)
+    nationality = models.CharField(max_length=100, null=True, blank=True)
+    nin = models.CharField(max_length=100, null=True, blank=True)
+    phone_number2 = models.CharField(max_length=100, null=True, blank=True)
+    reference = models.CharField(max_length=100, null=True, blank=True)
+    registration_date = models.CharField(max_length=100, null=True, blank=True)
+    residential_address = models.CharField(max_length=100, null=True, blank=True)
+    state_of_origin = models.CharField(max_length=300, null=True, blank=True)
+    state_of_residence = models.CharField(max_length=300, null=True, blank=True)
+    title = models.CharField(max_length=300, null=True, blank=True)
+    watch_listed = models.CharField(max_length=300, null=True, blank=True)
 
 
 class EmploymentDuration(BaseModel):
