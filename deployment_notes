@@ -7,7 +7,7 @@ heroku config --app seepspring
 heroku git:remote -a seepspring
 
 #run bash
-heroku run bash --app seepspring 
+heroku run bash --app seepspringbe
 
 
 

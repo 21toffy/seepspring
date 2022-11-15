@@ -229,13 +229,11 @@ CORS_ORIGIN_WHITELIST = (
     'http://localhost:5335',
 )
 
-# CSRF_TRUSTED_ORIGINS = [
-#     'https://seepspringfe.netlify.app',
-#     'https://seepspring.netlify.app',
-#     'http://seepspringfe.netlify.app',
-#     'http://seepspring.netlify.app',
-# ]
 
+
+SENDCHAMP_AUTHORIZATION = os.getenv("SENDCHAMP_AUTHORIZATION", "")
+SENDCHAMP_URL = os.getenv("SENDCHAMP_URL", "")
+SENDCHAMP_SENDER_ID = os.getenv("SENDCHAMP_SENDER_ID", "")
 
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"

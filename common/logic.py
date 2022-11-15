@@ -1,6 +1,11 @@
 import json
 import pathlib
 import requests
+from seepspring.settings import (
+    SENDCHAMP_AUTHORIZATION,
+    SENDCHAMP_SENDER_ID,
+    SENDCHAMP_URL
+)
 
 
 
@@ -47,9 +52,12 @@ class GetBVN(object):
 
 class SendSMS:
     def __init__(self, payload: dict) -> None:
-        self.url = self.openconfig()["sendchamp"]["url"]
+        # self.url = self.openconfig()["sendchamp"]["url"]
+        self.url = SENDCHAMP_URL
+
         self.payload = payload
-        self.sender_id = self.openconfig()["sendchamp"]["sender_id"]
+        # self.sender_id = self.openconfig()["sendchamp"]["sender_id"]
+        self.sender_id = SENDCHAMP_SENDER_ID
 
     def build_sms(self):
         payload = self.payload
@@ -63,7 +71,9 @@ class SendSMS:
 
     def get_authorization(self) -> str:
         config = self.openconfig()
-        authorization = config["sendchamp"]["authorization"]
+        # authorization = config["sendchamp"]["authorization"]
+        authorization = SENDCHAMP_AUTHORIZATION
+
         return authorization
 
     def openconfig(self) -> dict:
@@ -78,13 +88,9 @@ class SendSMS:
     
     def send_otp(self) ->dict:
         try:
-            print("in try sent otp ", self.url, self.payload,self.get_headers() )
             response = requests.post(self.url, json=self.payload, headers=self.get_headers())
-            print(response.text,123)
             return response.json()
         except Exception as e:
-            print(e, "excepton")
-            
             return  {
                     "data": None,
                     "message": "Something went wrong",

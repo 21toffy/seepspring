@@ -7,6 +7,9 @@ from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.db import transaction
 import json
+from seepspring.settings import(
+    SENDCHAMP_SENDER_ID
+)
 
 from loan.models import Interest, UserLoan
 
@@ -97,7 +100,6 @@ class ResolveBVN(APIView):
                 return Response({"detail":str(e), "status":"failed"}, status.HTTP_400_BAD_REQUEST)
 
             if bvn_request_data.status_code != 200: 
-                print(bvn_request_data.json()["error"], 12345)  
                 return Response({"detail":bvn_request_data.json()["error"], "status":"failed"}, status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({"detail":bvn_request_data.json(), "status":"success"}, status.HTTP_200_OK)
@@ -162,9 +164,7 @@ class SendOTPToPhone(APIView):
     mock =False
     permission_classes = (AllowAny,)
     def send_sms_logic(self, data):
-        print("trying to initialize class")                      
         initialize_sending = SendSMS(data)
-        print("send sms method after initializing class")
         send_otp = initialize_sending.send_otp()
         return send_otp
 
@@ -179,7 +179,8 @@ class SendOTPToPhone(APIView):
         built_data = {
                     "to": phone,
                     "message": f"Hello your OTP to create an account with us is {random_numbers}",
-                    "sender_name": openconfig()['sendchamp']['sender_id'],
+                    # "sender_name": openconfig()['sendchamp']['sender_id'],
+                    "sender_name": SENDCHAMP_SENDER_ID,
                     "route": "non_dnd"
                     }
         if phone:
@@ -189,14 +190,14 @@ class SendOTPToPhone(APIView):
                 time_difference = datetime.now() - check_number.updated_at.replace(tzinfo=None)
                 if time_difference  < timedelta(seconds=120):
                     return Response({"detail":wait_two_minutes, "status":"failed"}, status.HTTP_400_BAD_REQUEST)
-                if time_difference > timedelta(seconds=240) and check_number.count > 3:
+                if time_difference > timedelta(seconds=240) and check_number.count < 3:
                     return Response({"detail":wait_4_minutes, "status":"failed"}, status.HTTP_400_BAD_REQUEST)
 
                 send_otp = self.send_sms_logic(built_data)
                 check_number.code = random_numbers
+                check_number.is_deleted = False
                 check_number.count = check_number.count + 1
                 check_number.save()
-
                 if send_otp["code"] != 200:   
                     return Response({"detail":send_otp["message"], "status":"failed"}, status.HTTP_400_BAD_REQUEST)
                 else:
@@ -204,9 +205,7 @@ class SendOTPToPhone(APIView):
 
             else:
                 try:
-                    print("trying to create OTP object")
                     OtpPhone.objects.create(phone=phone, count=1, code = random_numbers)
-                    print("trying to send sms")
                     send_otp = self.send_sms_logic(built_data)
                     if send_otp["status"] != 200:   
                         if self.mock == True:
