@@ -88,23 +88,56 @@ from common.logic import (SendSMS, GetBVN)
 
 
 class ResolveBVN(APIView):   
-    mock = False     
+    mock = True     
     def get(self, request, bvn=None):
         if self.mock == True:
-            with open("./accounts/bvn.json", "r") as f:
-                bvn = json.load(f)
-            return Response({"detail":bvn["entity"], "status":"success"}, status.HTTP_200_OK)
+            bvn_data = {
+                "entity": {
+                "bvn": "22350348240",
+                "first_name": "ADEOLA",
+                "last_name": "AYO",
+                "middle_name": "MICHEAL",
+                
+                "gender": "Male",
+                "date_of_birth": "1972-02-19",
+                "phone_number1": "08099434292",
+                "image": "/9j/3AAQSkZJGgABAgBBBQABAAD/",
+                "last_name": "AYO",
+                "level_of_account": "Level 2 - Medium Level Accounts",
+                "lga_of_origin": "Odo Otin",
+                
+                "lga_of_residence": "Ilorin South",
+                "marital_status": "Single",
+                "middle_name": "OLUWATIMILEYIN",
+                    
+                    "name_on_card": "MICHEAL, ADEOLA A",
+                    "nationality": "Nigeria",
+                    "nin": "",
+                    "phone_number1": "08099434292",
+                    "phone_number2": "",
+                    "reference": "91b126d1-2467-42fc-b8d5-1cbd32257954",
+                    "registration_date": "21-Mar-2018",
+                    "residential_address": "24, ADELABU OWODE, ILORIN",
+                    "state_of_origin": "Osun State",
+                    "state_of_residence": "Kwara State",
+                    "title": "Mr",
+                    "watch_listed": "NO"
+                }
+            }
+            # with open("./accounts/bvn.json", "r") as f:
+            #     bvn = json.load(f)
+            return Response({"detail":bvn_data, "status":True}, status.HTTP_200_OK)
         else:
             get_bvn = GetBVN(bvn)
             try:
                 bvn_request_data = get_bvn.request_bvn()
             except Exception as e:
-                return Response({"detail":str(e), "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+                return Response({"detail":str(e), "status":False}, status.HTTP_400_BAD_REQUEST)
 
             if bvn_request_data.status_code != 200: 
-                return Response({"detail":bvn_request_data.json()["error"], "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+                return Response({"detail":bvn_request_data.json()["error"], "status":False}, status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({"detail":bvn_request_data.json(), "status":"success"}, status.HTTP_200_OK)
+                return Response({"detail":bvn_request_data.json(), "status":True}, status.HTTP_200_OK)
             
 
 # class ResolveBVN(APIView):        
@@ -141,15 +174,15 @@ class VerifyPhone(APIView):
         otp = request.data.get("otp", None)
         phone = request.data.get("phone", None)
         if otp is None or phone is None:
-            return Response({"detail":f"OTP or Phone can not be empty", "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":f"OTP or Phone can not be empty", "status":False}, status.HTTP_400_BAD_REQUEST)
         try:
             validate_mobile_num(phone)
         except Exception as e:
-            return Response({"detail":f"{phone} is not a valid Phone number", "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
         try:
             casted = self.validate_otp(otp)
         except Exception as e:
-            return Response({"detail":f"{otp} is an invalid OTP", "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":f"{otp} is an invalid OTP", "status":False}, status.HTTP_400_BAD_REQUEST)
         check_numbers = OtpPhone.objects.filter(phone=phone, is_deleted=False)
         if check_numbers:
             for check_number in check_numbers:
@@ -157,10 +190,10 @@ class VerifyPhone(APIView):
                 if saved_code == casted:
                     check_number.is_deleted=True
                     check_number.save()
-                    return Response({"detail":otp_match_success, "status":"success"}, status.HTTP_200_OK)
+                    return Response({"detail":otp_match_success, "status":True}, status.HTTP_200_OK)
                 else:
-                    return Response({"detail":otp_match_failed, "status":"failed"}, status.HTTP_400_BAD_REQUEST)
-        return Response({"detail":no_otp, "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail":otp_match_failed, "status":False}, status.HTTP_400_BAD_REQUEST)
+        return Response({"detail":no_otp, "status":False}, status.HTTP_400_BAD_REQUEST)
 
 class SendOTPToPhone(APIView):
     mock =False
@@ -175,7 +208,7 @@ class SendOTPToPhone(APIView):
         try:
             validate_mobile_num(phone)
         except Exception as e:
-            return Response({"detail":f"{phone} is not a valid Phone number", "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
 
         random_numbers=generate_four_random_digits()
         built_data = {
@@ -191,9 +224,9 @@ class SendOTPToPhone(APIView):
                 from datetime import datetime, timedelta
                 time_difference = datetime.now() - check_number.updated_at.replace(tzinfo=None)
                 if time_difference  < timedelta(seconds=120):
-                    return Response({"detail":wait_two_minutes, "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail":wait_two_minutes, "status":False}, status.HTTP_400_BAD_REQUEST)
                 if time_difference > timedelta(seconds=240) and check_number.count > 3:
-                    return Response({"detail":wait_4_minutes, "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail":wait_4_minutes, "status":False}, status.HTTP_400_BAD_REQUEST)
 
                 send_otp = self.send_sms_logic(built_data)
                 check_number.code = random_numbers
@@ -201,9 +234,9 @@ class SendOTPToPhone(APIView):
                 check_number.count = check_number.count + 1
                 check_number.save()
                 if send_otp["code"] != 200:   
-                    return Response({"detail":send_otp["message"], "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail":send_otp["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
                 else:
-                    return Response({"detail":otp_sent_success, "status":"success"}, status.HTTP_200_OK)
+                    return Response({"detail":otp_sent_success, "status":True}, status.HTTP_200_OK)
 
             else:
                 try:
@@ -211,15 +244,15 @@ class SendOTPToPhone(APIView):
                     send_otp = self.send_sms_logic(built_data)
                     if send_otp["status"] != 200:   
                         if self.mock == True:
-                            return Response({"detail":otp_sent_success, "status":"success"}, status.HTTP_200_OK)
-                        return Response({"detail":send_otp["message"], "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+                            return Response({"detail":otp_sent_success, "status":True}, status.HTTP_200_OK)
+                        return Response({"detail":send_otp["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
                     else:
                         
-                        return Response({"detail":otp_sent_success, "status":"success"}, status.HTTP_200_OK)
+                        return Response({"detail":otp_sent_success, "status":True}, status.HTTP_200_OK)
                 except Exception as e:
-                    return Response({"detail":str(e), "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail":str(e), "status":False}, status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({"detail":"phone number field can not be empty", "status":"failed"}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":"phone number field can not be empty", "status":False}, status.HTTP_400_BAD_REQUEST)
             
 
 
@@ -294,7 +327,7 @@ class EmploymentDurationListView(APIView):
     def get(self, request):
         employment_durations = EmploymentDuration.objects.all()
         serializer = self.serializer_class(employment_durations, many=True)
-        return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        return Response({"detail": True, "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
     
 class SalaryRangeListView(APIView):
     permission_classes = (AllowAny,)
@@ -303,7 +336,7 @@ class SalaryRangeListView(APIView):
     def get(self, request):
         salary_ranges = SalaryRange.objects.all()
         serializer = self.serializer_class(salary_ranges, many=True)
-        return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        return Response({"detail": True, "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
     
 
 
@@ -323,7 +356,7 @@ class UserRegistration(APIView):
             try:
                 bvn_data = request.data["bvn_data"]
             except Exception as e:
-                res = {"detail": str(e), "status": "failed"}
+                res = {"detail": str(e), "status":False}
                 return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
             try:
@@ -353,17 +386,17 @@ class UserRegistration(APIView):
                     title = bvn_data.get("title", ""),
                     watch_listed = bvn_data.get("watch_listed", ""),
                 )
-                res = {"detail": us.data, "status": "success"}
+                res = {"detail": us.data, "status":  True}
                 return Response(res, status=status.HTTP_200_OK)
             except Exception as e:
                 user.delete()
-                res = {"detail": str(e), "status": "failed"}
+                res = {"detail": str(e), "status": False}
                 return Response(res, status=status.HTTP_400_BAD_REQUEST)
         else:
             errors = us.errors
             string = (str(errors))
             respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1] 
-            res = {"detail": respo, "status": "failed"}
+            res = {"detail": respo, "status": False}
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
     # def get(self,request,pk):
@@ -423,7 +456,7 @@ class UserRegistration(APIView):
     #                         colleague_contact_serializer.save(user = personal_information_object)
     #                         if bank_details_serializer.is_valid():
     #                             bank_details_serializer.save(user = personal_information_object)
-    #                             return Response({"detail":"success", "data":user_serializer.data , "status":status.HTTP_201_CREATED}, status=status.HTTP_201_CREATED)
+    #                             return Response({"detail": True, "data":user_serializer.data , "status":status.HTTP_201_CREATED}, status=status.HTTP_201_CREATED)
     #                         else:
     #                             personal_information_object.delete()
     #                             return Response(bank_details_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -482,7 +515,7 @@ class ChangePasswordView(generics.UpdateAPIView):
             self.object.set_password(serializer.data.get("new_password"))
             self.object.save()
             response = {
-                'status': 'success',
+                'status': True,
                 'code': status.HTTP_200_OK,
                 'message': 'Password updated successfully',
                 'data': []
@@ -583,7 +616,7 @@ class UserLoanProfileAPIView(APIView):
             loan_interest = Interest.objects.filter(id = available_loan.interest.id).first()
         except AttributeError:
             response = {
-            'status': 'success',
+            'status': True,
             'code': status.HTTP_200_OK,
             'message': 'use loan profile fetched successfully',
             'data': {"loan_status":{"eligible_to_collect_loan": False}},
@@ -610,7 +643,7 @@ class UserLoanProfileAPIView(APIView):
             }
 
             response = {
-            'status': 'success',
+            'status': True,
             'code': status.HTTP_200_OK,
             'message': 'user loan profile fetched successfully',
             'data': user_loan_dictionary,
@@ -619,7 +652,7 @@ class UserLoanProfileAPIView(APIView):
             return Response(response, status=status.HTTP_200_OK)
         else:
             response = {
-            'status': 'success',
+            'status': True,
             'code': status.HTTP_200_OK,
             'message': 'use loan profile fetched successfully',
             'data': {"loan_status":available_loan.get_loan_default_details},
