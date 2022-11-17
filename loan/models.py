@@ -1,6 +1,6 @@
 from decimal import *
 from django.db import models
-from accounts.models import CustomUser
+from accounts.models import (CustomUser, BankAccountDetails)
 from common.models import BaseModel
 from common import constants
 import datetime
@@ -141,6 +141,7 @@ class UserLoan(BaseModel):
                 choices=constants.LOAN_REQUEST_STATUS,
                 max_length=225)
     loan_purpose = models.ForeignKey(LoanPurpose, on_delete=models.CASCADE, null=True)
+    account_number = models.ForeignKey(BankAccountDetails, on_delete=models.CASCADE, null=True)
     interest = models.ForeignKey(Interest, on_delete=models.CASCADE, null=True)
     loan_level = models.ForeignKey(LoanLevel, on_delete=models.CASCADE)
     paid = models.BooleanField(default=False)
@@ -163,18 +164,32 @@ class UserLoan(BaseModel):
     def __str__(self):
         return str(self.user) + " is owing? " + str(self.get_loan_default_details["eligible_to_collect_loan"])
 
-
     def save(self, *args, **kwargs):
         self.loan_date = timezone.now().date()
         if not self.id:
             self.loan_due_date = self.loan_date + datetime.timedelta(days=self.loan_level.days_tenure)
-            company_percentage = self.interest.vat + self.interest.service_charge + self.interest.interest
-            self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100
+            percentage_taken = (self.interest.interest * self.amount_requested) /100
+            company_percentage = self.interest.vat + self.interest.service_charge + percentage_taken/100
+            self.amount_disbursed = self.amount_requested - company_percentage * 100
             self.amount_left = self.amount_requested
         self.loan_due_date = self.loan_date+datetime.timedelta(days = self.loan_level.days_tenure)
-        company_percentage = self.interest.vat + self.interest.service_charge+self.interest.interest
-        self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100
+        percentage_taken = (self.interest.interest * self.amount_requested) /100
+        company_percentage = self.interest.vat + self.interest.service_charge + percentage_taken/100
+        self.amount_disbursed = self.amount_requested - company_percentage * 100
         return super(UserLoan, self).save(*args, **kwargs)
+
+    
+    # def save(self, *args, **kwargs):
+    #     self.loan_date = timezone.now().date()
+    #     if not self.id:
+    #         self.loan_due_date = self.loan_date + datetime.timedelta(days=self.loan_level.days_tenure)
+    #         company_percentage = self.interest.vat + self.interest.service_charge + self.interest.interest
+    #         self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100
+    #         self.amount_left = self.amount_requested
+    #     self.loan_due_date = self.loan_date+datetime.timedelta(days = self.loan_level.days_tenure)
+    #     company_percentage = self.interest.vat + self.interest.service_charge+self.interest.interest
+    #     self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100
+    #     return super(UserLoan, self).save(*args, **kwargs)
 
 
     @property

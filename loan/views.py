@@ -6,7 +6,7 @@ from common import constants
 from common.utils import todays_date
 import loan
 from .models import (Interest, InterestBreakdown, LoanLevel, LoanPurpose, UserLoan, HomePagePromotion, Guarntee,
-RepaymentGuide,LoanPageInformationSlider, SinglePromotion
+RepaymentGuide,LoanPageInformationSlider, SinglePromotion, BankAccountDetails
 )
 from .serializers import (LoanLevelserializer, LoanRepaymentSerializer, LoanRequestSerializer, RepaymentGuideSerializer, UserLoanserializer, InterestBreakdownSerializer, InterestSerializer, RepaymentGuideSerializer,
 HomePagePromotionSerializer,
@@ -130,22 +130,24 @@ class RequestLoan(APIView):
                     loan_purpose = validated_data.get("loan_purpose")
                     interest = validated_data.get("interest")
                     amount = validated_data.get("amount")
+                    account_number = validated_data.get("account_number")                    
                     if Decimal(amount) > 5000000:
-                        return Response({"detail":"you are not eligible for a loan above N 50'000", "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+                        return Response({"detail":"you are not eligible for a loan above ₦ 50'000", "status":False}, status.HTTP_400_BAD_REQUEST)
                     if Decimal(amount) < 100000:
-                        return Response({"detail":"you are not eligible for a loan above N 1'000", "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
-
+                        return Response({"detail":"you can not request for a loan below ₦ 1'000", "status":False}, status.HTTP_400_BAD_REQUEST)
                     try:
                         loan_level_obj = LoanLevel.objects.filter(level=user.user_level).first()
-                        if Decimal(amount) > loan_level_obj.max_amount :
-                            return Response({"detail":f"you are not eligible for a loan above N {loan_level_obj.max_amount/100}", "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+                        if Decimal(amount) > loan_level_obj.max_amount *100 :
+                            return Response({"detail":f"you are not eligible for a loan above ₦ {float(loan_level_obj.max_amount)}", "status":False}, status.HTTP_200_OK)
 
                         loan_purpose_obj = LoanPurpose.objects.get(id=loan_purpose)
-                        interest_obj = Interest.objects.filter(id=interest).first()
+                        interest_obj = Interest.objects.get(id=interest)
+                        account_number_obj = BankAccountDetails.objects.get(id = account_number)
                     except Exception as does_not_exist:
-                        return Response ({"detail":str(does_not_exist), "status":status.HTTP_404_NOT_FOUND}, status.HTTP_404_NOT_FOUND) 
+                        return Response ({"detail":str(does_not_exist), "status":False}, status.HTTP_404_NOT_FOUND) 
                     user_loan = UserLoan.objects.create(
                         loan_purpose = loan_purpose_obj,
+                        account_number = account_number_obj,
                         user=user,
                         interest =interest_obj,
                         loan_level = loan_level_obj,
@@ -153,18 +155,18 @@ class RequestLoan(APIView):
                         amount_left = Decimal(amount)
                     )
                     data = {
-                        "id": user_loan.id,
+                        # "id": user_loan.id,
                         "requested_amount": user_loan.amount_requested,
                         "disbursed_amount": user_loan.amount_disbursed,
                         "due_date": user_loan.loan_due_date,
                         "purpose": user_loan.loan_purpose.purpose,
 
                     }
-                    return Response({"detail":"loan request submitted and would be disbursed in a moment", "data":data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+                    return Response({"detail":"loan request submitted and would be disbursed in a moment", "data":data, "status":True}, status.HTTP_200_OK)
                 else:
-                    return Response({"detail":serializer.errors, "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)       
+                    return Response({"detail":serializer.errors, "status":False}, status.HTTP_400_BAD_REQUEST)       
             else:
-                return Response({"detail":"You are not eligible for a loan", "data":{}, "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+                return Response({"detail":"You are not eligible for a loan", "status":False}, status.HTTP_200_OK)
 
 
 

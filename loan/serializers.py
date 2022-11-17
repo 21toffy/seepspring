@@ -48,11 +48,14 @@ class loanPurposeserializer(serializers.ModelSerializer):
 class LoanRequestSerializer(serializers.Serializer):
     loan_purpose = serializers.UUIDField()
     interest = serializers.UUIDField()
+    account_number = serializers.UUIDField()
+
     amount = serializers.DecimalField(default=0.0, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
     class Meta:
         fields= [
             "loan_purpose",
             "interest",
+            "account_number",
             "amount",
         ]
 
