@@ -349,25 +349,25 @@ class ColleagueContactCreationSerializer(serializers.ModelSerializer):
 
 
 class BankAccountDetailsCreationSerializer(serializers.ModelSerializer):
-    user_id = serializers.UUIDField(required=False)
+    # user_id = serializers.UUIDField(required=False)
 
     class Meta:
         model = BankAccountDetails
         fields = [
-            "user_id",
+            # "user_id",
             "bank_name",
             "account_number",
             "account_name",
         ]
 
-    def create(self, validated_data):
-        bank_account_creation = BankAccountDetails.objects.create(
-            user = validated_data['user'],
-            bank_name = validated_data['bank_name'],
-            account_number = validated_data['account_number'], 
-            account_name = validated_data['account_name'],       
-        )
-        return bank_account_creation
+    # def create(self, validated_data):
+    #     bank_account_creation = BankAccountDetails.objects.create(
+    #         user = validated_data['user'],
+    #         bank_name = validated_data['bank_name'],
+    #         account_number = validated_data['account_number'], 
+    #         account_name = validated_data['account_name'],       
+    #     )
+    #     return bank_account_creation
 
 
 
@@ -384,7 +384,7 @@ class LoginSerializer(serializers.ModelSerializer[CustomUser]):
     def get_tokens(self, obj):  # type: ignore
         """Get user token."""
         user = CustomUser.objects.get(phone_number=obj.phone_number)
-        return {'refresh': user.tokens()['refresh'], 'access': user.tokens()['access'], 'id': str(user.id),}
+        return {'refresh': user.tokens()['refresh'], 'access': user.tokens()['access'], 'id': str(user.id), "status":True}
 
     class Meta:
         model = CustomUser
@@ -409,8 +409,15 @@ class LoginSerializer(serializers.ModelSerializer[CustomUser]):
 
         if not valid:
             raise serializers.ValidationError('incorrect credentials')
-
         return user
+        
+    def __init__(self, *args, **kwargs):
+        super(LoginSerializer, self).__init__(*args, **kwargs)
+        self.fields['phone_number'].error_messages['blank'] = 'Please enter your phone number.'
+        self.fields['phone_number'].error_messages['invalid'] = 'Please enter a valid phone number.'
+        self.fields['password'].error_messages['blank'] = 'Please enter your password.'
+        self.fields['password'].error_messages['invalid'] = 'Please enter a valid password.'
+
 
         # if not user.is_active:
 

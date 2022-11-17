@@ -9,7 +9,9 @@ HomePageListView,
     RepayLoan,
 RepaymentGuideListView,
 RequestLoan,
-LoanLevelListView
+LoanLevelListView,
+UserLoanRequestsListView,
+SinglePromotionDetailView
 
 )
 
@@ -24,12 +26,14 @@ urlpatterns = [
     path('request-for-loan', RequestLoan.as_view(), name='request-for-loan'),
     path('repay-loan', RepayLoan.as_view(), name='repay-loan'),
     path('loan-level', LoanLevelListView.as_view(), name='loan_level'),
+    path('loan-request-list/', UserLoanRequestsListView.as_view(), name='loan_request'),
 
-
-
+    path('single-promotion/', SinglePromotionDetailView.as_view(), name='single_promotion'),
 
 
 ]
+
+
 
 
 # HomePageListView RepaymentGuideListView

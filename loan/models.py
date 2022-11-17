@@ -60,6 +60,25 @@ class LoanPurpose(BaseModel):
     purpose = models.CharField(max_length=300, null=True, blank=True)
     active = models.BooleanField(default=False)
 
+    def __str__(self):
+        return ":Loan purpose" + str(self.purpose)
+
+
+
+
+
+
+
+class SinglePromotion(BaseModel):
+    title = models.CharField(max_length=300, null=True, blank=True)
+    description = models.CharField(max_length=300, null=True, blank=True)
+    image_url = models.URLField(max_length=300, null=True, blank=True)
+    active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "single promotion" + str(self.title)
+
+
 
 
 
@@ -69,13 +88,22 @@ class Interest(BaseModel):
     service_charge = models.DecimalField(default=5.0, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
     interest = models.DecimalField(default=28.0, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
     active = models.BooleanField(default=False)
-
     @property
     def aggregated_interest(self):
         return self.vat + self.service_charge + self.interest
 
     def __str__(self):
         return str(self.interest_name)
+
+class LoanPageInformationSlider(BaseModel):
+    number = models.IntegerField(default=1, null=True, blank=True)
+    interest = models.ForeignKey(Interest, on_delete=models.CASCADE, null=True, blank=True)
+    title = models.CharField(max_length=300, null=True, blank=True)
+    description = models.CharField(max_length=300, null=True, blank=True)
+    image_url = models.URLField(max_length=300, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.interest.interest_name) + "Active Loan Information Slider" + "Number "+ str(self.number)
 
 
 class InterestBreakdown(BaseModel):

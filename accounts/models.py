@@ -49,7 +49,7 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     )
     email = models.EmailField(_('email address'), unique=True)
     phone_number = models.CharField(_('phone number'), unique=True, max_length=14, validators=[validate_mobile_num])
-    
+     
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
     middle_name = models.CharField(max_length=100, null=True, blank=True)

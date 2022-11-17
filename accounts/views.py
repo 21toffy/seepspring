@@ -140,20 +140,17 @@ class ResolveBVN(APIView):
                 return Response({"detail":bvn_request_data.json(), "status":True}, status.HTTP_200_OK)
             
 
-# class ResolveBVN(APIView):        
-#     def get(self, request, bvn=None):
-#         get_bvn = GetBVN(bvn)
-#         try:
-#             bvn_request_data = get_bvn.request_bvn()
-#         except Exception as e:
-#             return Response({"detail":str(e)}, status.HTTP_400_BAD_REQUEST)
 
-#         if bvn_request_data.status_code == 401: 
-#             return Response({"detail":"something went wrong, if issue persist please contact us, thanks"}, status.HTTP_400_BAD_REQUEST)
-#         if bvn_request_data.status_code == 400: 
-#             return Response({"detail":"something went wrong, if issue persist please contact us, thanks"}, status.HTTP_400_BAD_REQUEST)        
-#         else:
-#             return Response({"detail":bvn_request_data.text}, status.HTTP_200_OK)
+
+
+
+class UserBankAccountListView(APIView):
+    serializer_class = BankAccountDetailsGetSerializer
+    permission_classes = (IsAuthenticated,)
+    def get(self, request):
+        active_user_loans = BankAccountDetails.objects.filter(user=request.user)
+        serializer = self.serializer_class(active_user_loans, many=True)
+        return Response({"detail":serializer.data, "status":True}, status.HTTP_200_OK)
         
 
 
@@ -344,6 +341,16 @@ class SalaryRangeListView(APIView):
 
 
 
+class UserBankAccountCreateView(APIView):
+    permission_classes = (IsAuthenticated,)
+    def post(self,request,*args,**kwargs):
+        us=BankAccountDetailsCreationSerializer(data=request.data,many=False)
+        if us.is_valid():
+            user = us.save(user = request.user)
+            res = {"detail": us.data, "status":  True}
+            return Response(res, status=status.HTTP_200_OK)
+
+
 class UserRegistration(APIView):
     permission_classes = (AllowAny,)
     # serializer_class = GlobalAccountListSerializer
@@ -530,35 +537,23 @@ class ChangePasswordView(generics.UpdateAPIView):
 
 class LoginAPIView(APIView):
     permission_classes = (AllowAny,)
-    # renderer_classes = (UserJSONRenderer,)
     serializer_class = LoginSerializer
     def post(self, request):
         try:
-            """Return user after login."""
-            # user = request.data.get('user', {})
-            data = self.check_ifempty(request.data)
-            if data != 1:
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
             serializer = self.serializer_class(data=request.data)
             if not serializer.is_valid():
-                error_list = [serializer.errors[error][0] for error in serializer.errors]             
-                return Response({'message':error_list[0]}, status=status.HTTP_400_BAD_REQUEST)
-            serialized_data = {'phone_number': serializer.data['phone_number'], 'refresh':serializer.data['tokens']['refresh'], 'access':serializer.data['tokens']['access'], 'id': serializer.data["tokens"]['id']}
-            return Response(serialized_data, status=status.HTTP_200_OK)
+                # error_list = [serializer.errors[error][0] for error in serializer.errors]
+                errors = serializer.errors
+                string = (str(errors))
+                respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1] 
+                res = {"detail": respo, "status": False}          
+                return Response(res, status=status.HTTP_400_BAD_REQUEST)
+            serialized_data = {'refresh':serializer.data['tokens']['refresh'], 'access':serializer.data['tokens']['access']}
+            return Response({"detail":serialized_data, "status":True}, status=status.HTTP_200_OK)
         except LookupError as le:
             x = str(le)[1:len(str(le)) -1 ]
-            return Response({x:[f" {x} can not be empty"]}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":[f" {x} can not be empty"], "status":False}, status=status.HTTP_400_BAD_REQUEST)
             
-
-    def check_ifempty(self, data):
-        password = data['password']
-        phone_number = data['phone_number']
-        if phone_number == '':
-            return {'phone_number': ['phone number can not be empty']}
-        if password == '':
-            return {'password': ['Password can not be empty']}
-        if phone_number and password:
-            return 1
         
 
       
@@ -571,6 +566,20 @@ class LogoutAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+class UserMinimalProfileAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+    def get(self, request, *args, **kwargs):
+        return self.get_user(request, *args, **kwargs)
+    def get_user(self, request,*args,**kwargs):
+        user = CustomUser.objects.filter(id = self.request.user.id).first()
+        user_serializer = UserRegistrationSerializer(user)
+        return Response({"detail":user_serializer.data, "status":True}, status=status.HTTP_200_OK)
+
+
 
 
 

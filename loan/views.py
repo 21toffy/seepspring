@@ -6,12 +6,13 @@ from common import constants
 from common.utils import todays_date
 import loan
 from .models import (Interest, InterestBreakdown, LoanLevel, LoanPurpose, UserLoan, HomePagePromotion, Guarntee,
-RepaymentGuide,
+RepaymentGuide,LoanPageInformationSlider, SinglePromotion
 )
 from .serializers import (LoanLevelserializer, LoanRepaymentSerializer, LoanRequestSerializer, RepaymentGuideSerializer, UserLoanserializer, InterestBreakdownSerializer, InterestSerializer, RepaymentGuideSerializer,
 HomePagePromotionSerializer,
 GuarnteeSerializer,
-loanPurposeserializer,
+loanPurposeserializer,LoanPageInformationSliderSerializer,
+SinglePromotionSerializer,
 )
 from rest_framework.permissions import AllowAny
 from rest_framework import status
@@ -26,6 +27,17 @@ from django.db import transaction
 # Create your views here.
 
 
+
+class SinglePromotionDetailView(APIView):
+    serializer_class = SinglePromotionSerializer
+    permission_classes = (AllowAny,)
+    def get(self, request):
+        single_promotion = SinglePromotion.objects.filter(active = True).first()
+        # if single_promotion is None:
+        #     return Response({"detail":{}, "status":True}, status.HTTP_200_OK)
+        serializer = self.serializer_class(single_promotion)
+        return Response({"detail":serializer.data, "status":True}, status.HTTP_200_OK)
+
 class LoanLevelListView(APIView):
     serializer_class = LoanLevelserializer
     permission_classes = (IsAuthenticated,)
@@ -34,9 +46,9 @@ class LoanLevelListView(APIView):
             user_level = request.user.user_level
             loan_level = LoanLevel.objects.filter(level = user_level).first()
             serializer = self.serializer_class(loan_level)
-            return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+            return Response({"detail": serializer.data, "status":True}, status.HTTP_200_OK)
         except Exception as e:
-            return Response(data={"details":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":str(e), status:False}, status.HTTP_400_BAD_REQUEST)
 
 
 class RepayLoan(APIView):
@@ -211,7 +223,6 @@ class RepaymentGuideListView(APIView):
 
 
 
-
 class ActiveLoanListView(APIView):
     serializer_class = UserLoanserializer
     permission_classes = (IsAuthenticated,)
@@ -223,6 +234,44 @@ class ActiveLoanListView(APIView):
 
 
 
+from rest_framework.pagination import PageNumberPagination
+
+class UserLoanRequestsListView(APIView):
+    serializer_class = UserLoanserializer
+    permission_classes = (IsAuthenticated,)
+    def get(self, request, **kwargs):
+        paginator = PageNumberPagination()
+        total = request.GET.get('total',10)
+        statuss = request.GET.get('status', '')
+        available_status = ["PENDING", "DISBURSED", "LATE", "SETTLED", "DISAPPROVED", "APPROVED"]
+        try:
+            int(total)
+        except Exception as e:
+            return Response({"detail":"total must be an integer", "status":True}, status.HTTP_200_OK)
+        paginator.page_size = total
+
+        if statuss:
+            if statuss.upper() in available_status:
+                active_user_loans = UserLoan.objects.filter(user= request.user, loan_request_status__exact = statuss.upper()).order_by("-created_at")
+            else:
+                active_user_loans = UserLoan.objects.filter(user = request.user).order_by("-created_at")
+        else:
+            active_user_loans = UserLoan.objects.filter(user = request.user).order_by("-created_at")
+        result_page = paginator.paginate_queryset(active_user_loans, request)
+        serializer = UserLoanserializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+            
+        
+
+
+
+
+
+
+
+
+
 class InterestBreakdownView(APIView):
     InterestSerializer
     serializer_class = InterestBreakdownSerializer
@@ -230,10 +279,8 @@ class InterestBreakdownView(APIView):
     def get(self, request):
         try:
             active_interest = Interest.objects.filter(active=True).first()
-            all_interest_breakdown = InterestBreakdown.objects.all().first()
         except Exception as e:
             return Response({"data":{}}, status=status.HTTP_400_BAD_REQUEST)
-
         active_interest_serializer = {
             "id":active_interest.id,
             "interest_name":active_interest.interest_name,
@@ -241,23 +288,10 @@ class InterestBreakdownView(APIView):
             "service_charge":active_interest.service_charge,
             "interest":active_interest.interest,
         }
-
-
-        all_interest_breakdown_serializer = {
-            "id":all_interest_breakdown. id,
-            "text_1":all_interest_breakdown.text_1,
-            "text_2":all_interest_breakdown.text_2,
-            "text_4":all_interest_breakdown.text_4,
-            "text_5":all_interest_breakdown.text_5,
-            "text_6":all_interest_breakdown.text_6,
-            "text_7":all_interest_breakdown.text_7,
-            "text_8":all_interest_breakdown.text_8,
-            "text_9":all_interest_breakdown.text_9,
-            "text_10":all_interest_breakdown.text_10,
-        }
+        loan_page_information_slider = LoanPageInformationSlider.objects.filter(interest = active_interest, active=True)
+        serializer = LoanPageInformationSliderSerializer(loan_page_information_slider, many=True)
         res={
             "active_interest":active_interest_serializer,
-            "interest_break_down":all_interest_breakdown_serializer
+            "active_loan_information_slider":serializer.data
         }
-
-        return Response({"detail":"success", "data":res, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        return Response({"detail":res, "status":True}, status.HTTP_200_OK)

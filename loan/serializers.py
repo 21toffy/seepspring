@@ -1,9 +1,24 @@
 from common import constants
 from .models import (Interest, InterestBreakdown, LoanLevel, LoanPurpose, LoanRepayment, UserLoan, HomePagePromotion, Guarntee,
-RepaymentGuide,)
+RepaymentGuide,LoanPageInformationSlider, SinglePromotion)
 from rest_framework import serializers
 
 
+
+
+
+class SinglePromotionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SinglePromotion
+        fields = ["title", "description", "image_url",]
+
+
+
+
+class LoanPageInformationSliderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoanPageInformationSlider
+        fields = ["number","title", "description", "image_url",]
 
 
 
@@ -12,7 +27,7 @@ from rest_framework import serializers
 class LoanLevelserializer(serializers.ModelSerializer):
     class Meta:
         model = LoanLevel
-        fields = ["level","max_amount","days_tenure"]
+        fields = ["level","max_amount","days_tenure", "min_amount"]
 
 
 
@@ -70,7 +85,19 @@ class UserLoanserializer(serializers.ModelSerializer):
             "loan_date",
             "loan_due_date",
             "interest"
+        )
 
+class UserBankAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserLoan
+        fields = (
+            "user",
+            "loan_request_status",
+            "amount_requested",
+            "amount_disbursed",
+            "loan_date",
+            "loan_due_date",
+            "interest"
         )
   
 

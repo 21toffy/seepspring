@@ -17,6 +17,9 @@ from .views import (
     LogoutAPIView,
     VerifyAccountNumber,
     VerifyPhone,
+    UserMinimalProfileAPIView,
+    UserBankAccountCreateView,
+    UserBankAccountListView
 )
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -52,24 +55,13 @@ urlpatterns = [
 
     path("verify-otp", VerifyPhone.as_view(), name="verify_otp"),
 
-    path("fetch-bvn/<str:bvn>", ResolveBVN.as_view(), name="verify_otp")
+    path("fetch-bvn/<str:bvn>", ResolveBVN.as_view(), name="verify_otp"),
+    path("user/profile", UserMinimalProfileAPIView.as_view(), name="loan-profile"),
 
 
+    path("create-bank-account", UserBankAccountCreateView.as_view(), name="create_bank_account"),
 
-
-
-
-    
-
-
-    
-
-
-
-
-
-    
-
+    path("list-bank-account", UserBankAccountListView.as_view(), name="list_bank_account"),
 
 
 ]
