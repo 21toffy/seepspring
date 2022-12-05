@@ -57,3 +57,47 @@ class DebtorsListSerializer(serializers.ModelSerializer):
 
 
 
+class AdminLoginSerializer(serializers.ModelSerializer[CustomUser]):
+    phone_number = serializers.CharField(max_length=255)
+    password = serializers.CharField(max_length=128, write_only=True)
+    tokens = serializers.SerializerMethodField()
+
+    def get_tokens(self, obj):  # type: ignore
+        """Get user token."""
+        user = CustomUser.objects.get(phone_number=obj.phone_number)
+        return {'refresh': user.tokens()['refresh'], 'access': user.tokens()['access'], 'id': str(user.id), "status":True}
+
+    class Meta:
+        model = CustomUser
+        fields = ['phone_number',  'password', 'tokens']
+
+    def validate(self, data):  # type: ignore
+        """Validate and return user login."""
+        phone_number = data.get('phone_number', None)
+        password = data.get('password', None)
+        if phone_number is None:
+            raise serializers.ValidationError('A phone number address is required to log in.')
+
+        if password is None:
+            raise serializers.ValidationError('A password is required to log in.')
+
+        user = CustomUser.objects.filter(phone_number__exact=phone_number).first()
+        if user is None:
+            raise serializers.ValidationError('A user with this phone number and password was not found.')
+
+        if user.role != "admin":
+            raise serializers.ValidationError('wrong credentials')
+
+        
+        valid = user.check_password(password)
+
+        if not valid:
+            raise serializers.ValidationError('incorrect credentials')
+        return user
+        
+    def __init__(self, *args, **kwargs):
+        super(AdminLoginSerializer, self).__init__(*args, **kwargs)
+        self.fields['phone_number'].error_messages['blank'] = 'Please enter your phone number.'
+        self.fields['phone_number'].error_messages['invalid'] = 'Please enter a valid phone number.'
+        self.fields['password'].error_messages['blank'] = 'Please enter your password.'
+    

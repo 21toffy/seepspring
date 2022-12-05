@@ -40,5 +40,31 @@ class ContactUs(BaseModel):
 
 
 
+class Testimonial(BaseModel):
+    image_url = models.CharField(null=True, blank=True, max_length=500)
+    person_name = models.CharField(null=True, blank=True, max_length=500)
+    testimony = models.CharField(null=True, blank=True, max_length=500)
+    active = models.BooleanField(default=False)
+    def __str__(self):
+        active_testimonial = "testimony of " + self.person_name + " is an ACTIVE testimonial "
+        inactive_testimonial = "testimony of " + self.person_name + " is an INACTIVE testimonial "
+        return inactive_testimonial if self.active == False else active_testimonial
+
+
+class OurTeam(BaseModel):
+    image_url = models.CharField(null=True, blank=True, max_length=500)
+    person_name = models.CharField(null=True, blank=True, max_length=500)
+    position = models.CharField(null=True, blank=True, max_length=500)
+    active = models.BooleanField(default=False)
+    def __str__(self):
+        active_string = "Team member " + self.person_name + " " + self.position + " is an ACTIVE team member"
+        inactive_string = "Team member " + self.person_name + " " + self.position + " is an IN-ACTIVE team member"
+        return active_string  if self.active == True else inactive_string 
+
+
+
+
+
+
 
 

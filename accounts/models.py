@@ -47,6 +47,17 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
           ('Male', 'Male'),
           ('Female', 'Female'),         
     )
+
+    choice_role = (                          #private attributes
+          ('admin', 'admin'),
+          ('superadmin', 'superadmin'),  
+          ('accountant', 'accountant'),         
+          ('reconciliation_officer', 'reconciliation_officer'),
+          ('customer', 'customer'),       
+
+    )
+
+
     email = models.EmailField(_('email address'), unique=True)
     phone_number = models.CharField(_('phone number'), unique=True, max_length=14, validators=[validate_mobile_num])
      
@@ -54,6 +65,7 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=100, null=True, blank=True)
     middle_name = models.CharField(max_length=100, null=True, blank=True)
     gender = models.CharField(max_length=10, choices=choice_gender)
+    role = models.CharField(max_length=30, choices=choice_role, default="customer")
     dob = models.DateField(null=True, blank=True)
     lga_of_origin = models.CharField(max_length=300, null=True, blank=True)
     lga_of_residence = models.CharField(max_length=300, null=True, blank=True)
