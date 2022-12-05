@@ -19,6 +19,30 @@ from django.db.models import Q
 
 
 
+class AdminLoginAPIView(APIView):
+    permission_classes = (AllowAny,)
+    serializer_class = serializers.AdminLoginSerializer
+    def post(self, request):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            if not serializer.is_valid():
+                # error_list = [serializer.errors[error][0] for error in serializer.errors]
+                errors = serializer.errors
+                string = (str(errors))
+                # print(list(errors.keys()[0]),9999999)
+                respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1] 
+                joined_data = respo if list(errors.keys())[0]== 'non_field_errors' else list(errors.keys())[0] + " " + respo
+                res = {"detail": joined_data, "status": False}          
+                return Response(res, status=status.HTTP_400_BAD_REQUEST)
+            serialized_data = {'refresh':serializer.data['tokens']['refresh'], 'access':serializer.data['tokens']['access']}
+            return Response({"detail":serialized_data, "status":True}, status=status.HTTP_200_OK)
+        except LookupError as le:
+            x = str(le)[1:len(str(le)) -1 ]
+            return Response({"detail":[f" {x} can not be empty"], "status":False}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+
 class AdminDashboard(APIView):
 
     permission_classes = (IsAuthenticated,)
