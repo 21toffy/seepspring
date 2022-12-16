@@ -14,6 +14,10 @@ from pathlib import Path
 import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+import redis
+
+
+r = redis.Redis(host='localhost', port=6379, db=0)
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -28,6 +32,7 @@ SECRET_KEY = 'django-insecure-tk$b%*t*q789$r7*p2w3dy2sd4kzuktr=%3$(+ic@-rfyd_o_o
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+PROD = False
 
 ALLOWED_HOSTS = ["*",'127.0.0.1','0.0.0.0', "seepspring.herokuapp.com", "seepspringbe.herokuapp.com"]
 
@@ -97,16 +102,34 @@ WSGI_APPLICATION = 'seepspring.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+
+
+if PROD:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "NAME": "seepspring",
+            "USER": "tofunmi",
+            "PASSWORD": "toffy123",
+            "HOST": "localhost",
+            "PORT": "5432",
+        }
+    }
+
+
+
+
 
 
 
@@ -235,20 +258,16 @@ SENDCHAMP_AUTHORIZATION = os.getenv("SENDCHAMP_AUTHORIZATION", "")
 SENDCHAMP_URL = os.getenv("SENDCHAMP_URL", "")
 SENDCHAMP_SENDER_ID = os.getenv("SENDCHAMP_SENDER_ID", "")
 
-CELERY_BROKER_URL = "redis://redis:6379"
-CELERY_RESULT_BACKEND = "redis://redis:6379"
 
-from celery.schedules import crontab
-import seepspring.tasks
 
-CELERY_BEAT_SCHEDULE = {
-    "sample_task": {
-        "task": "seepspring.tasks.sample_task",
-        "schedule": timedelta(seconds=1)#crontab(minute="*/1"),
-    },
-    'update_defaulters_new_balance': {
-        'task': 'seepspring.tasks.update_defaulters_new_balance',
-        'schedule': timedelta(seconds=1)#crontab(minute="*/1") #crontab(minute=0, hour=0)
+# BROKER_URL = "amqp://guest:guest@localhost:5672//"
 
-    },
-}
+
+
+
+# CELERY CONFIGURATIONS
+CELERY_BROKER_URL=os.getenv("CELERY_BROKER")
+CELERY_RESULT_BACKEND=os.getenv("CELERY_BACKEND")
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = "UTC"
