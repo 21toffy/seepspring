@@ -17,7 +17,4 @@ urlpatterns = [
     path('debtors-list',DebtorsApiView.as_view(), name='debtors-list-view'),
     path('applications-list',ApplicationApiView.as_view(), name='application-list-view'),
     path('login', AdminLoginAPIView.as_view(), name="login"),
-
-
-
 ]

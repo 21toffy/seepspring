@@ -171,15 +171,15 @@ class VerifyPhone(APIView):
         otp = request.data.get("otp", None)
         phone = request.data.get("phone", None)
         if otp is None or phone is None:
-            return Response({"detail":f"OTP or Phone can not be empty", "status":False}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":f"OTP or Phone can not be empty" , "message":f"OTP or Phone can not be empty", "status":False}, status.HTTP_400_BAD_REQUEST)
         try:
             validate_mobile_num(phone)
         except Exception as e:
-            return Response({"detail":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":f"{phone} is not a valid Phone number","message":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
         try:
             casted = self.validate_otp(otp)
         except Exception as e:
-            return Response({"detail":f"{otp} is an invalid OTP", "status":False}, status.HTTP_400_BAD_REQUEST)
+            return Response({"message":f"{otp} is an invalid OTP", "detail":f"{otp} is an invalid OTP","status":False}, status.HTTP_400_BAD_REQUEST)
         check_numbers = OtpPhone.objects.filter(phone=phone, is_deleted=False)
         if check_numbers:
             for check_number in check_numbers:
@@ -189,8 +189,8 @@ class VerifyPhone(APIView):
                     check_number.save()
                     return Response({"detail":otp_match_success, "status":True}, status.HTTP_200_OK)
                 else:
-                    return Response({"detail":otp_match_failed, "status":False}, status.HTTP_400_BAD_REQUEST)
-        return Response({"detail":no_otp, "status":False}, status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail":otp_match_failed, "message":otp_match_failed, "status":False}, status.HTTP_400_BAD_REQUEST)
+        return Response({"detail":no_otp,"message":no_otp, "status":False}, status.HTTP_400_BAD_REQUEST)
 
 class SendOTPToPhone(APIView):
     mock =False
@@ -205,7 +205,7 @@ class SendOTPToPhone(APIView):
         try:
             validate_mobile_num(phone)
         except Exception as e:
-            return Response({"detail":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":f"{phone} is not a valid Phone number", "message":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
 
         random_numbers=generate_four_random_digits()
         built_data = {
@@ -266,16 +266,16 @@ class VerifyAccountNumber(APIView):
             r = requests.get(url, headers=hed)
             data = r.json()
             if not data["status"]:
-                return  Response({"detail":data["message"],"data":{"status":False},"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+                return  Response({"detail":data["message"],"status":False}, status.HTTP_400_BAD_REQUEST)
             
             name_correlation = self.resolve_name(data.get("data").get("account_name"), request.user.full_name)
             bank_name = data.get("data").get("account_name")
             plartform_name = request.user.full_name
             if name_correlation:
-                return Response({"detail":data["message"], "data":{"status":True, "name":bank_name.lower()}, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
-            return Response({"detail":f"Names miss match, Bank name: {bank_name}, Name on our plartform {plartform_name}","data":{"status":False},"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+                return Response({"detail":data["message"], "status":True}, status.HTTP_200_OK)
+            return Response({"detail":f"Names miss match, Bank name: {bank_name}, Name on our plartform {plartform_name}","status":False}, status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({"detail":str(e),"data":{"status":False},"status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":str(e),"status":False}, status.HTTP_400_BAD_REQUEST)
             
 
     def resolve_name(self, resolved_name, database_name):
@@ -311,8 +311,8 @@ class GenerateOtpView(APIView):
             results = {
                 'otp': generate_token(phone_number)
             }
-            return Response({"auth_status":1,"detail":"Token generated successfully, this is a test message", "data":results, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
-        return Response({"detail":serializer.errors,  "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+            return Response({"auth_status":1,"detail":"Token generated successfully, this is a test message", "details":results, "status":True}, status.HTTP_200_OK)
+        return Response({"detail":serializer.errors,  "status":False}, status.HTTP_400_BAD_REQUEST)
         
     
 
@@ -324,7 +324,7 @@ class EmploymentDurationListView(APIView):
     def get(self, request):
         employment_durations = EmploymentDuration.objects.all()
         serializer = self.serializer_class(employment_durations, many=True)
-        return Response({"detail": True, "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        return Response({"status": True, "detail":serializer.data}, status.HTTP_200_OK)
     
 class SalaryRangeListView(APIView):
     permission_classes = (AllowAny,)
@@ -333,7 +333,7 @@ class SalaryRangeListView(APIView):
     def get(self, request):
         salary_ranges = SalaryRange.objects.all()
         serializer = self.serializer_class(salary_ranges, many=True)
-        return Response({"detail": True, "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        return Response({"status": True, "detail":serializer.data}, status.HTTP_200_OK)
     
 
 
@@ -349,6 +349,12 @@ class UserBankAccountCreateView(APIView):
             user = us.save(user = request.user)
             res = {"detail": us.data, "status":  True}
             return Response(res, status=status.HTTP_200_OK)
+        else:
+            string = (str(us.errors))
+            respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1] 
+            res = {"detail": respo, "status": False}
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class UserRegistration(APIView):
@@ -523,14 +529,16 @@ class ChangePasswordView(generics.UpdateAPIView):
             self.object.save()
             response = {
                 'status': True,
-                'code': status.HTTP_200_OK,
-                'message': 'Password updated successfully',
-                'data': []
+                'detail': 'Password updated successfully',
             }
 
             return Response(response, status=status.HTTP_200_OK)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        errors = serializer.errors
+        string = (str(errors))
+        respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1] 
+        res = {"detail": respo, "status": False}
+        return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -608,7 +616,71 @@ class UserProfileAPIView(APIView):
         _ColleagueContactCreationSerializer = ColleagueContactGetSerializer(_ColleagueContact)
         _BankAccountDetailsCreationSerializer = BankAccountDetailsGetSerializer(_BankAccountDetails)
         z = {"user_details":user_serializer.data, "eployment_duration":_UserEmploymentDurationCreationSerializer.data, "ralary_range":_UserSalaryRangeCreationSerializer.data, "employment_information":_EmploymentinformationCreationSerializer.data,"emergency_contact":_EmergencyContactCreationSerializer.data, "colleague_contact":_ColleagueContactCreationSerializer.data, "bank_details":_BankAccountDetailsCreationSerializer.data}
-        return Response(data={"detail":"user profile", "user":z}, status=status.HTTP_200_OK)
+        return Response(data={"detail":z, "status":True}, status=status.HTTP_200_OK)
+
+
+
+# class UserLoanProfileAPIView(APIView):
+#     # serializer_class = LogoutSerializer
+#     permission_classes = (IsAuthenticated,)
+
+#     def get(self, request, *args, **kwargs):
+#         try:
+#             available_loan = UserLoan.objects.filter(
+#                 Q(paid=False) |
+#                 Q(active=False) |
+#                 Q(user=request.user)).first()
+#             loan_interest = Interest.objects.filter(id = available_loan.interest.id).first()
+#         except AttributeError:
+#             response = {
+#             'status': True,
+#             'message': 'use loan profile fetched successfully',
+#             'detail': {"eligible_to_collect_loan": False},
+#             }
+#             return Response(response, status=status.HTTP_200_OK)
+
+#         if available_loan:
+#             user_loan_dictionary = {
+#                 "eligible_to_collect_loan": False,
+#                  "user":available_loan.user.id,
+#                  "id":available_loan.id,
+#                 "loan_request_status":available_loan.loan_request_status,
+#                 "amount_requested":available_loan.amount_requested,
+#                 "amount_disbursed":available_loan.amount_disbursed,
+#                 "amount_owed":available_loan.amount_left,
+#                 "loan_date":available_loan.loan_date,
+#                 "loan_due_date":available_loan.loan_due_date,
+#                 "interest":{
+#                             "id":loan_interest.id,
+#                             "vat":loan_interest.vat,
+#                             "service_charge":loan_interest.service_charge,
+#                             "interest":loan_interest.interest,
+#                 }
+#             }
+
+#             response = {
+#             'status': True,
+#             'message': 'user loan profile fetched successfully',
+#             'detail': user_loan_dictionary,
+#             }
+
+#             return Response(response, status=status.HTTP_200_OK)
+#         else:
+#             response = {
+#             'status': True,
+#             'message': 'use loan profile fetched successfully',
+#             'detail': available_loan.get_loan_default_details,
+#             }
+#             return Response(response, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
 
 
 
@@ -617,24 +689,26 @@ class UserLoanProfileAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
-        try:
-            available_loan = UserLoan.objects.filter(
+        
+        available_loan = UserLoan.objects.filter(
                 Q(paid=False) |
                 Q(active=False) |
                 Q(user=request.user)).first()
+        if available_loan:
+            print("is not none")
+
             loan_interest = Interest.objects.filter(id = available_loan.interest.id).first()
-        except AttributeError:
-            response = {
-            'status': True,
-            'code': status.HTTP_200_OK,
-            'message': 'use loan profile fetched successfully',
-            'data': {"loan_status":{"eligible_to_collect_loan": False}},
-            }
-            return Response(response, status=status.HTTP_200_OK)
+        # except AttributeError:
+        #     response = {
+        #     'status': True,
+        #     'message': 'use loan profile fetched successfully',
+        #     'detail': {"eligible_to_collect_loan": False},
+        #     }
+        #     return Response(response, status=status.HTTP_200_OK)
 
         if available_loan:
             user_loan_dictionary = {
-                "loan_status":{"eligible_to_collect_loan": False},
+                "eligible_to_collect_loan": False,
                  "user":available_loan.user.id,
                  "id":available_loan.id,
                 "loan_request_status":available_loan.loan_request_status,
@@ -653,19 +727,16 @@ class UserLoanProfileAPIView(APIView):
 
             response = {
             'status': True,
-            'code': status.HTTP_200_OK,
             'message': 'user loan profile fetched successfully',
-            'data': user_loan_dictionary,
+            'detail': user_loan_dictionary,
             }
 
             return Response(response, status=status.HTTP_200_OK)
         else:
             response = {
             'status': True,
-            'code': status.HTTP_200_OK,
-            'message': 'use loan profile fetched successfully',
-            'data': {"loan_status":available_loan.get_loan_default_details},
+            'message': 'user loan profile fetched successfully',
+            'detail': {"eligible_to_collect_loan": True},
             }
             return Response(response, status=status.HTTP_200_OK)
-
 

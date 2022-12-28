@@ -129,8 +129,7 @@ class AdminDashboard(APIView):
         
 
         metrics = {**amount_disbursed, **amount_owed, **amount_requested}
-        return Response({"detail":"success", "status":status.HTTP_200_OK, "data":{"users":client_data, "metrics":metrics, "user_count":all_clients.count()} }, status.HTTP_200_OK)
-
+        return Response({"status":True, "detail":{"users":client_data, "metrics":metrics, "user_count":all_clients.count()} }, status.HTTP_200_OK)
 
 
 
@@ -146,7 +145,7 @@ class DebtorsApiView(APIView):
         else:
             all_debtors = UserLoan.objects.filter(active = True, paid = False, loan_request_status =constants.DISBURSED)
         serializer = serializers.DebtorsListSerializer(all_debtors, many=True)
-        return Response({"detail":"success", "status":status.HTTP_200_OK, "data":serializer.data}, status.HTTP_200_OK)
+        return Response({"status":True, "detail":serializer.data}, status.HTTP_200_OK)
 
 
 
@@ -161,4 +160,4 @@ class ApplicationApiView(APIView):
         else:
             all_applications = UserLoan.objects.filter(active = True, paid = False, loan_request_status =constants.PENDING)
         serializer = serializers.DebtorsListSerializer(all_applications, many=True)
-        return Response({"detail":"success", "status":status.HTTP_200_OK, "data":serializer.data}, status.HTTP_200_OK)
+        return Response({"status":True, "detail":serializer.data}, status.HTTP_200_OK)
