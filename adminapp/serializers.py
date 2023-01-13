@@ -56,6 +56,43 @@ class DebtorsListSerializer(serializers.ModelSerializer):
         ]
 
 
+class LoanListSerializer(serializers.ModelSerializer):
+    interest = InterestSerializer()
+    loan_level = LoanLevelSerializer()
+    user = UserDetailsSerializer()
+   
+
+    class Meta:
+        model = UserLoan
+        fields = [  "user","interest","loan_level",
+                    "paid","amount_requested",
+                    "amount_disbursed","loan_date",
+                    "loan_due_date","loan_time",
+                    "loan_due_time","load_default_status",
+                    "number_of_default_days","amount_left","get_loan_default_details","accumulated_amount"
+        
+        ]
+
+
+
+# class ApplicationListSerializer(serializers.ModelSerializer):
+#     interest = InterestSerializer()
+#     loan_level = LoanLevelSerializer()
+#     user = UserDetailsSerializer()
+   
+
+#     class Meta:
+#         model = UserLoan
+#         fields = [  "user","interest","loan_level",
+#                     "paid","amount_requested",
+#                     "amount_disbursed","loan_date",
+#                     "loan_due_date","loan_time",
+#                     "loan_due_time","load_default_status",
+#                     "number_of_default_days","amount_left","get_loan_default_details","accumulated_amount"
+        
+#         ]
+
+
 
 class AdminLoginSerializer(serializers.ModelSerializer[CustomUser]):
     phone_number = serializers.CharField(max_length=255)

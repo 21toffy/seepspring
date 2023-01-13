@@ -4,7 +4,8 @@ from .views import (
 AdminDashboard,
 ApplicationApiView,
 DebtorsApiView, 
-AdminLoginAPIView
+AdminLoginAPIView,
+LoanStatusListView
 )
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -17,4 +18,7 @@ urlpatterns = [
     path('debtors-list',DebtorsApiView.as_view(), name='debtors-list-view'),
     path('applications-list',ApplicationApiView.as_view(), name='application-list-view'),
     path('login', AdminLoginAPIView.as_view(), name="login"),
+    # path('loan-list/<str:status>/?<int:total>/?',LoanStatusListView.as_view(), name='loan-list-view'),
+    path('loan-list/<str:status>/<int:total>',LoanStatusListView.as_view(), name='loan-list-view'),    
+    #     
 ]

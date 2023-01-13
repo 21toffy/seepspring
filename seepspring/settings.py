@@ -129,7 +129,7 @@ else:
             "NAME": "seepspring",
             "USER": "tofunmi",
             "PASSWORD": "toffy123",
-            "HOST": "localhost",
+            "HOST": "db",
             "PORT": "5432",
         }
     }
