@@ -19,6 +19,8 @@ try:
         password="toffy123",
         host="db",
         port="5432",
+        dbname="seepspring"
+
     )
 except psycopg2.OperationalError as e:
     print(e)
