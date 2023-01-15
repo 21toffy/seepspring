@@ -1,0 +1,63 @@
+version: '3.7'
+
+
+services:
+  db:
+    image: postgres
+    volumes: 
+      - postgres_data:/var/lib/postgresql/data/
+    env_file: .env
+    container_name: seepspring_db
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    command: >
+      sh -c "python manage.py migrate &&
+             python3 manage.py wait_for_db &&
+             python manage.py runserver 0.0.0.0:8001
+             "
+    ports:
+      - "8001:8001"
+    env_file: .env
+    restart: always
+    volumes: 
+      - .:/usr/src/app
+    container_name: seepspring_app
+    depends_on: 
+      - db
+
+  redis:
+    image: redis:alpine
+    container_name: seepspring_redis
+
+  celery:
+    restart: always
+    build:
+      context: .
+    command: celery -A seepspring worker -l info
+    volumes:
+      - .:/usr/src/app
+    container_name: seepspring_celery
+    depends_on:
+      - db
+      - redis
+      - web
+  beat:
+    restart: always
+    build:
+      context: .
+    command: celery -A seepspring beat
+    volumes:
+      - .:/usr/src/app
+    container_name: seepspring_beat
+    depends_on:
+      - db
+      - redis
+      - web
+      - celery
+
+
+
+volumes:
+  postgres_data:
