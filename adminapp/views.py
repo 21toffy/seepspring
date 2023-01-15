@@ -175,11 +175,11 @@ class ApplicationApiView(APIView):
 
 
 
-queryset = MyModel.objects.all()
-query = Q()
-for filter in filters:
-    query &= Q(**{filter['field_name']: filter['value']})
-queryset = queryset.filter(query)
+# queryset = MyModel.objects.all()
+# query = Q()
+# for filter in filters:
+#     query &= Q(**{filter['field_name']: filter['value']})
+# queryset = queryset.filter(query)
 
 
 

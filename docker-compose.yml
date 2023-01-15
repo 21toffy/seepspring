@@ -20,6 +20,7 @@ services:
     ports:
       - "8000:8000"
     env_file: .env
+    restart: always
     volumes: 
       - .:/usr/src/app
     container_name: seepspring_app
