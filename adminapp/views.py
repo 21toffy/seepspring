@@ -185,9 +185,9 @@ class ApplicationApiView(APIView):
 
 
 class LoanStatusListView(APIView):
-    # http://localhost:8000/example/?param1=value1&param2=value2
+    # http://localhost:8001/example/?param1=value1&param2=value2
     # ?status=approved&total=1000
-    # http://127.0.0.1:8000/api/v1/admin/loan-list/?status=approved&total=1000/
+    # http://127.0.0.1:8001/api/v1/admin/loan-list/?status=approved&total=1000/
 
     serializer_class = serializers.LoanListSerializer
     permission_classes = (IsAuthenticated,)
