@@ -19,10 +19,10 @@ try:
         password="toffy123",
         host="db",
         port="5432",
-
-
     )
 except psycopg2.OperationalError:
+    print(e)
+    print(f"psycopg2.connect(dbname='{dbname}', user='{user}', password='{password}', host='{host}', port='{port}')")
     sys.exit(-1)
 sys.exit(0)
 
