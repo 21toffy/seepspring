@@ -9,7 +9,6 @@ app.sh
 envs
 logs
 debug.log
-Dockerfile
 *.pyc
 .idea/
 staticfiles/
