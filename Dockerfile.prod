@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 # install dependencies
 
 RUN pip install --upgrade pip
-COPY ./requirements.txt ./
+COPY ./requirements_prod.txt ./
 COPY ./.env ./
 RUN pip install -r requirements_prod.txt
 
