@@ -140,11 +140,16 @@ class UserLoan(BaseModel):
                 default=constants.PENDING,
                 choices=constants.LOAN_REQUEST_STATUS,
                 max_length=225)
+    loan_repayment_status = models.CharField(
+                default=constants.ONGOING,
+                choices=constants.LOAN_REPAYMENT_STATUS,
+                max_length=225)
     loan_purpose = models.ForeignKey(LoanPurpose, on_delete=models.CASCADE, null=True)
     account_number = models.ForeignKey(BankAccountDetails, on_delete=models.CASCADE, null=True)
     interest = models.ForeignKey(Interest, on_delete=models.CASCADE, null=True)
     loan_level = models.ForeignKey(LoanLevel, on_delete=models.CASCADE)
     paid = models.BooleanField(default=False)
+    late_payment = models.BooleanField(default=False)
     amount_requested = models.DecimalField(default=0.00, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
     amount_disbursed = models.DecimalField(default=0.00, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
 
@@ -171,25 +176,37 @@ class UserLoan(BaseModel):
             percentage_taken = (self.interest.interest * self.amount_requested) /100
             company_percentage = self.interest.vat + self.interest.service_charge + percentage_taken/100
             self.amount_disbursed = self.amount_requested - company_percentage * 100
-            self.amount_left = self.amount_requested
+            # self.amount_left = self.amount_requested
         self.loan_due_date = self.loan_date+datetime.timedelta(days = self.loan_level.days_tenure)
         percentage_taken = (self.interest.interest * self.amount_requested) /100
         company_percentage = self.interest.vat + self.interest.service_charge + percentage_taken/100
         self.amount_disbursed = self.amount_requested - company_percentage * 100
         return super(UserLoan, self).save(*args, **kwargs)
 
-    
-    # def save(self, *args, **kwargs):
-    #     self.loan_date = timezone.now().date()
-    #     if not self.id:
-    #         self.loan_due_date = self.loan_date + datetime.timedelta(days=self.loan_level.days_tenure)
-    #         company_percentage = self.interest.vat + self.interest.service_charge + self.interest.interest
-    #         self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100
-    #         self.amount_left = self.amount_requested
-    #     self.loan_due_date = self.loan_date+datetime.timedelta(days = self.loan_level.days_tenure)
-    #     company_percentage = self.interest.vat + self.interest.service_charge+self.interest.interest
-    #     self.amount_disbursed = self.amount_requested - (company_percentage * self.amount_requested)/ 100
-    #     return super(UserLoan, self).save(*args, **kwargs)
+
+    @property
+    def loan_purpose_name(self,):
+        return self.loan_purpose.purpose
+    @property
+    def bank_account_number(self,):
+        return self.account_number.account_number
+    @property
+    def bank_name(self,):
+        return self.account_number.bank_name
+
+    @property
+    def interest_name(self,):
+        return self.interest.interest_name
+
+    @property
+    def loan_level(self,):
+        return self.loan_level.loan_name
+
+
+    @property
+    def service_charge(self,):
+        return self.amount_requested - self.amount_disbursed
+        
 
 
     @property
@@ -243,7 +260,37 @@ class LoanRepayment(BaseModel):
     editable_repayment_date = models.DateTimeField(auto_now=True)
     confirmation_status = models.BooleanField(default=False)
 
+    @property
+    def user_id(self,):
+        return self.user_loan.id
+    @property
+    def loan_due_date(self,):
+        return self.user_loan.loan_due_date
+    @property
+    def days_overdue(self,):
+        return self.user_loan.number_of_default_days
+    @property
+    def amount_left(self,):
+        return self.user_loan.amount_left + self.user_loan.accumulated_amount
+    @property
+    def loan_id(self,):
+        return self.user_loan.id
 
-# class LoanDefault(BaseModel):
-#     user_loan = models.ForeignKey(UserLoan, on_delete=models.CASCADE, null=True)
-#     number_of
+
+class AmountDisbursed(BaseModel):
+    user_loan = models.ForeignKey(UserLoan, on_delete=models.CASCADE, null=True)
+    amount_disbursed = models.DecimalField(default=0.00, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
+    disbursement_date = models.DateTimeField(auto_now_add=True)
+    transaction_refernce = models.CharField(max_length=255)
+    editable_disbursement_date = models.DateTimeField(auto_now=True)
+    status = models.BooleanField(default=False)
+
+    @property
+    def user_id(self,):
+        return self.user_loan.id
+    @property
+    def bank_name(self,):
+        return self.user_loan.account_number.bank_name
+    @property
+    def account_number(self,):
+        return self.user_loan.account_number.account_number

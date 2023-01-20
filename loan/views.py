@@ -21,6 +21,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import (IsAuthenticated,AllowAny)
 from decimal import *
 from django.db import transaction
+from common.utils import get_first_serializer_error
 
 
 
@@ -52,7 +53,8 @@ class LoanLevelListView(APIView):
 
 
 class RepayLoan(APIView):
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
+    
     mocked = False
     def post(self, request, *args, **kwargs):
         if self.mocked is True:
@@ -71,7 +73,7 @@ class RepayLoan(APIView):
                     if money_left <= 0:
                         loan_exists.paid = True
                         loan_exists.active = False
-                        loan_exists.status = constants.SETTLED
+                        loan_exists.loan_repayment_status = constants.SETTLED
                         loan_exists.save()
 
                         if todays_date() > loan_exists.loan_due_date and loan_exists.number_of_default_days > 5:
@@ -79,19 +81,19 @@ class RepayLoan(APIView):
                             loan_exists.load_default.status =True
                             loan_exists.save()
                     else:
-                        loan_exists.status = constants.PART_SETTLEMENT
+                        loan_exists.loan_repayment_status = constants.PART_SETTLEMENT
                         loan_exists.save()
                     data = {
                         "amount_payed" : serializer.validated_data["amount"],
                         "amount_left": Decimal(0) if money_left <= 0 else money_left,
                         "details":loan_exists.get_loan_default_details
                     }
-                    return Response({"detail":"success", "data":data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+                    return Response({"detail":"success", "data":data, "status":True}, status.HTTP_200_OK)
                 else:
-                    return Response({"detail":serializer.errors, "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail":serializer.errors, "status":False}, status.HTTP_400_BAD_REQUEST)
 
             else:
-                return Response({"detail":"You dont have an outstanding loan", "data":{}, "status":status.HTTP_400_BAD_REQUEST}, status.HTTP_400_BAD_REQUEST)
+                return Response({"detail":"You dont have an outstanding loan", "data":{}, "status":False}, status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -108,7 +110,7 @@ class RepayLoan(APIView):
 
 class RequestLoan(APIView):
     # serializer_class = GuarnteeSerializer
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
 
     def get_loan_eligibility_details(self,user):
         with transaction.atomic():
@@ -163,7 +165,7 @@ class RequestLoan(APIView):
                     }
                     return Response({"detail":"loan request submitted and would be disbursed in a moment", "data":data, "status":True}, status.HTTP_200_OK)
                 else:
-                    return Response({"detail":serializer.errors, "status":False}, status.HTTP_400_BAD_REQUEST)       
+                    return Response({"detail":get_first_serializer_error(serializer.errors), "status":False}, status.HTTP_400_BAD_REQUEST)       
             else:
                 return Response({"detail":"You are not eligible for a loan", "status":False}, status.HTTP_200_OK)
 
@@ -176,9 +178,9 @@ class LoanPurposeListView(APIView):
         try:
             loan_purposes = LoanPurpose.objects.filter(active=True)
             serializer = self.serializer_class(loan_purposes, many=True)
-            return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+            return Response({"detail":"success", "data":serializer.data, "status":True}, status.HTTP_200_OK)
         except Exception as e:
-            return Response(data={"details":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":str(e), "status":False}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -190,9 +192,9 @@ class GuarnteeListView(APIView):
         try:
             our_guarantee = Guarntee.objects.filter(active=True)
             serializer = self.serializer_class(our_guarantee)
-            return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+            return Response({"detail":"success", "data":serializer.data, "status":True}, status.HTTP_200_OK)
         except Exception as e:
-            return Response(data={"details":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"details":str(e), "status":False}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -204,9 +206,9 @@ class HomePageListView(APIView):
         try:
             home_page_promotion = HomePagePromotion.objects.filter(active=True).first()
             serializer = HomePagePromotionSerializer(home_page_promotion)
-            return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+            return Response({"detail":"success", "data":serializer.data, "status":True}, status.HTTP_200_OK)
         except Exception as e:
-            return Response(data={"details":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"details":str(e), "status":False}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -218,9 +220,9 @@ class RepaymentGuideListView(APIView):
         try:
             repayment_guide = RepaymentGuide.objects.filter(active=True)
             serializer = self.serializer_class(repayment_guide, many=True)
-            return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+            return Response({"detail":"success", "data":serializer.data, "status":True}, status.HTTP_200_OK)
         except Exception as e:
-            return Response(ata={"details":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"details":str(e), "status":False}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -230,7 +232,7 @@ class ActiveLoanListView(APIView):
     def get(self, request):
         active_user_loans = UserLoan.objects.filter(active=True).order_by("-created_at")[:5]
         serializer = self.serializer_class(active_user_loans, many=True)
-        return Response({"detail":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        return Response({"detail":"success", "data":serializer.data, "status":True}, status.HTTP_200_OK)
         
 
 

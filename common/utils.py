@@ -58,8 +58,39 @@ def generate_four_random_digits() -> int:
     return number
     
 
-# def openconfig() -> dict:
-#     with open("config.json", "r") as f:
-#         config = json.load(f)
-#         return config
+def get_first_serializer_error(errors) -> str:
+    # function to get the first error message from a serializer's errors
+    for i in errors:
+        # Extract the error message
+        error_message = i + errors[i][0][4:]
+    return error_message
 
+
+import datetime
+def get_date_yyyy_mm_dd():
+    today = datetime.date.today()
+    return today.strftime('%Y-%m-%d')
+
+
+def getdate_time_yyyy_mm_dd_hh_ss_sm():
+    from datetime import datetime
+    current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return current_datetime
+
+
+def convert__to_datetime():
+    from datetime import datetime, date
+
+    datetime_string = getdate_time_yyyy_mm_dd_hh_ss_sm()
+    datetime_object = datetime.strptime(datetime_string, "%Y-%m-%d %H:%M:%S")
+    date_object = datetime_object.date()
+    return date_object
+def get_current_month():
+    import datetime
+    current_month = datetime.datetime.now().strftime("%B")
+    return current_month
+
+
+def get_current_month_as_string():
+    current_month_number = datetime.datetime.now().month
+    return current_month_number

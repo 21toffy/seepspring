@@ -3,24 +3,169 @@ from common import constants
 from accounts.models import (CustomUser)
 from rest_framework import serializers
 
-from loan.models import LoanLevel, UserLoan
+from loan.models import LoanLevel, UserLoan, LoanRepayment, AmountDisbursed
 from loan.serializers import InterestSerializer
 
 
 
+class LoanRepaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoanRepayment
+        exclude = ["user_loan", "editable_repayment_date"]
 
 
+class UserLoanSerializer(serializers.ModelSerializer):
 
-class DashboardUserListSerializer(serializers.ModelSerializer):
-    # contact = ImageSerializer(source='image_set', many=True)
+
+    loan_purpose_name = serializers.SerializerMethodField()
+    bank_account_number = serializers.SerializerMethodField()
+    bank_name = serializers.SerializerMethodField()
+
+    interest_name = serializers.SerializerMethodField()
+    # loan_level = serializers.SerializerMethodField()
+    service_charge = serializers.SerializerMethodField()
+
 
     class Meta:
+        model = UserLoan
+        fields = [
+            'loan_request_status',
+            'loan_purpose_name',
+            'bank_account_number', 
+            'interest_name',
+            # 'loan_level', 
+            'bank_name',
+            'paid',
+            'late_payment', 
+            'amount_requested',
+            'amount_disbursed',
+            'loan_date',
+            'loan_due_date',
+            'loan_time', 
+            'number_of_default_days',
+            'accumulated_amount', 
+            'service_charge'
+        ]
+    def get_loan_purpose_name(self, obj):
+        return obj.loan_purpose_name
+    def get_bank_account_number(self, obj):
+        return obj.bank_account_number
+    def get_bank_name(self, obj):
+        return obj.bank_name
+    def get_interest_name(self, obj):
+        return obj.interest_name
+    # def get_loan_level(self, obj):
+    #     return obj.loan_level
+    def get_service_charge(self, obj):
+        return obj.service_charge
+
+
+
+
+
+class AmountDisbursedListSerializer(serializers.ModelSerializer):
+    user_id = serializers.SerializerMethodField()
+    bank_name = serializers.SerializerMethodField()
+    account_number = serializers.SerializerMethodField()
+
+
+    class Meta:
+        model = AmountDisbursed
+        fields = ( 
+            'id',
+            'user_id',
+            'amount_disbursed', 
+            'bank_name',
+            'account_number', 
+            'disbursement_date',
+            'status', 
+
+
+            )
+    def get_user_id(self, obj):
+        return obj.user_id
+    def get_bank_name(self, obj):
+        return obj.bank_name
+    def get_account_number(self, obj):
+        return obj.account_number
+
+            
+
+class LoanRepaymentListSerializer(serializers.ModelSerializer):
+    loan_id = serializers.SerializerMethodField()
+    user_id = serializers.SerializerMethodField()
+    loan_due_date = serializers.SerializerMethodField()
+    days_overdue = serializers.SerializerMethodField()
+    amount_left = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LoanRepayment
+        fields = ( 
+            'id',
+            'user_id',
+            'amount', 
+            'loan_due_date',
+            'days_overdue', 
+            'amount_left',
+            'loan_id', 
+            'transaction_refernce',
+            'repayment_date', 
+
+            )
+    
+    def get_loan_id(self, obj):
+        return obj.loan_id
+    def get_user_id(self, obj):
+        return obj.user_loan.user.id
+    def get_loan_due_date(self, obj):
+        return obj.loan_due_date
+    def get_days_overdue(self, obj):
+        return obj.days_overdue
+    def get_amount_left(self, obj):
+        return obj.amount_left
+    
+    
+
+
+
+
+
+class LoanApplicationListSerializer(serializers.ModelSerializer):
+    service_charge = serializers.SerializerMethodField()
+    class Meta:
+        model = UserLoan
+        fields = ( 'id', 'user', 'loan_date', 'amount_requested', 'amount_disbursed','service_charge', 'loan_request_status')
+    
+    def get_service_charge(self, obj):
+        return obj.service_charge
+    
+
+
+
+
+class userListSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    class Meta:
         model = CustomUser
-        fields = [  "user_level","full_name",
-                    "email","phone_number",
+        fields = ('pk', 'email', 'current_address', 'phone_number','full_name', 'status')
+    def get_full_name(self, obj):
+        return obj.full_name
+    def get_status(self, obj):
+        return "Active" if obj.is_active else "Inactive"
+
+class DashboardUserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = [  "user_level",
+                    "full_name",
+                    "email",
+                    "phone_number",
                     "dob","gender",
-                    "state_of_origin","marital_status",
-                    "current_address","bvn_phone_number",
+                    "state_of_origin",
+                    "marital_status",
+                    "current_address",
+                    "bvn_phone_number",
                     "user_level",
         
         ]
