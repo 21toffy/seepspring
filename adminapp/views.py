@@ -2,13 +2,16 @@ from datetime import datetime
 from django.shortcuts import render
 
 from accounts.models import CustomUser
-from loan.models import UserLoan
+from loan.models import UserLoan, LoanRepayment, AmountDisbursed
 from . import serializers
 
 from common import constants
-from common.utils import todays_date
+from common.utils import get_date_yyyy_mm_dd, convert__to_datetime, get_current_month_as_string
 
 from django.db.models import Q
+from rest_framework.exceptions import ValidationError
+
+from rest_framework import generics
 
 
 
@@ -20,7 +23,449 @@ from rest_framework.permissions import (IsAuthenticated,AllowAny)
 from decimal import *
 from django.db.models import Sum
 from django.db.models import Q
-from rest_framework.pagination import PageNumberPagination
+from rest_framework import pagination
+
+
+
+
+# view to list out all debtors 
+class DebtorsApiView(APIView):
+    permission_classes = (IsAuthenticated,)
+    mocked = False
+    def get(self, request, *args, **kwargs):
+        query_param = request.GET.get('query')
+        if query_param is not None:
+            all_debtors = UserLoan.objects.filter(active = True,
+            paid = False,
+            loan_request_status =constants.DISBURSED).filter(Q(user__first_name__icontains=query_param) | Q(user__last_name__icontains=query_param))
+        else:
+            all_debtors = UserLoan.objects.filter(active = True, paid = False, loan_request_status =constants.DISBURSED)
+        serializer = serializers.DebtorsListSerializer(all_debtors, many=True)
+        return Response({"status":True, "detail":serializer.data}, status.HTTP_200_OK)
+
+
+
+
+class UserLoanDetailView(generics.RetrieveAPIView):
+    queryset = UserLoan.objects.all()
+    serializer_class = serializers.UserLoanSerializer
+    permission_classes = [AllowAny]
+    
+
+    def get(self, request, *args, **kwargs):
+        pk = self.kwargs.get('pk')
+        user_loan = self.get_object(pk=pk)
+        serializer = serializers.UserLoanSerializer(user_loan)
+        loan_repayments = LoanRepayment.objects.filter(user_loan=user_loan)
+        serializer_repayment = serializers.LoanRepaymentSerializer(loan_repayments, many=True)
+        return Response({'user_loan': serializer.data, 'loan_repayments': serializer_repayment.data})
+   
+    def get_object(self, pk=None):
+        queryset = self.filter_queryset(self.get_queryset())
+        if pk is not None:
+            return queryset.filter(pk=pk).first()
+        return super().get_object()
+
+
+
+
+
+class PendingListAPIViewListAPIView(APIView):
+
+    def post(self, request):
+        # entity = request.data.get('entity')
+        page = request.data.get('page', 1)
+        per_page = request.data.get('perPage', 100)        
+        filters = request.data.get('filters', None)
+
+        default_filter = [
+                {
+                "field": "bank_name",
+                "value":""
+                },
+                                {
+                "field": "account_number",
+                "value":""
+                },
+                {
+                "field": "user_id",
+                "value":""
+                },
+                {
+                    "field": "amount_requested",
+                    "value": 0
+                }
+            ]
+
+        if filters is not None and len(filters)< 1:
+            filters = default_filter
+        if filters is None:
+            filters = default_filter
+        
+        # Apply filters to queryset
+        queryset = UserLoan.objects.filter(loan_request_status="PENDING")
+
+        try:
+            for filter in filters:
+                field = filter['field']
+                value = filter['value']
+                if field == "amount_requested":
+                    if int(value) > 0:
+                        queryset = queryset.filter(**{field: value})
+                if field == 'user_id':
+                    if value != "":
+                        queryset = queryset.filter(**{"user_loan__user__id": value})
+
+                if field == 'account_number':
+                    if value != "":
+                        queryset = queryset.filter(**{"user_loan__account_number__account_number": value})
+                
+                if field == 'bank_name':
+                    if value != "":
+                        queryset = queryset.filter(**{"user_loan__account_number__bank_name": value})
+
+            # print(queryset, value, field)
+        except Exception as e:
+            return Response(({
+                "message": str(e),
+                "payload": {
+                    "gridData": [],
+                    "totalCount": 0
+                },
+                "status": "BAD_REQUEST",
+                "statusCode": 400
+            }), status=status.HTTP_400_BAD_REQUEST)
+        paginator = pagination.PageNumberPagination()
+        paginator.page_size = per_page
+        result_page = paginator.paginate_queryset(queryset, request)
+        total_count = paginator.page.paginator.count
+
+  
+        serializer = serializers.LoanApplicationListSerializer(result_page, many=True)
+        grid_data = serializer.data
+
+        # Return response
+        return Response({
+            "message": "SUCCESS",
+            "payload": {
+                "gridData": grid_data,
+                "totalCount": total_count
+            },
+            "status": "OK",
+            "statusCode": 200
+        })
+
+
+class AmountDisbursedListAPIView(APIView):
+
+    def post(self, request):
+        # entity = request.data.get('entity')
+        page = request.data.get('page', 1)
+        per_page = request.data.get('perPage', 100)
+        filters = request.data.get('filters', None)
+
+        default_filter = [
+                {
+                "field": "amount_disbursed",
+                "value":0
+                },
+                {
+                "field": "bank_name",
+                "value":""
+                },
+                                {
+                "field": "account_number",
+                "value":""
+                },
+                {
+                "field": "user_id",
+                "value":""
+                },
+                {
+                    "field": "disbursement_date",
+                    "value": get_date_yyyy_mm_dd()
+                },
+                {
+                    "field": "bank_name",
+                    "value": ""
+                },
+                                {
+                    "field": "transaction_reference",
+                    "value": ""
+                }
+            ]
+
+        if filters is not None and len(filters)< 1:
+            filters = default_filter
+        if filters is None:
+            filters = default_filter
+        
+        queryset = AmountDisbursed.objects.all().order_by('-disbursement_date')
+        # print(queryset, 11223599)
+        for filter in filters:
+            field = filter['field']
+            value = filter['value']
+            if field == "disbursement_date":
+                if value != "":
+                    queryset = queryset.filter(**{"disbursement_date__year":value[0:4], "disbursement_date__month":value[5:7], "disbursement_date__day":value[8:]})            
+            
+            if field == 'amount_disbursed':
+                if int(value) > 0:
+                    queryset = queryset.filter(**{field: value})
+
+            if field == 'transaction_refernce':
+                if value != "":
+                    queryset = queryset.filter(**{field: value})
+
+            if field == 'user_id':
+                if value != "":
+                    queryset = queryset.filter(**{"user_loan__user__id": value})
+
+            if field == 'transaction_refernce':
+                if value != "":
+                    queryset = queryset.filter(**{field: value})
+
+            if field == 'account_number':
+                if value != "":
+                    queryset = queryset.filter(**{"user_loan__account_number__account_number": value})
+            
+            if field == 'bank_name':
+                if value != "":
+                    queryset = queryset.filter(**{"user_loan__account_number__bank_name": value})
+            
+        
+
+        # Paginate queryset
+        paginator = pagination.PageNumberPagination()
+        paginator.page_size = per_page
+        result_page = paginator.paginate_queryset(queryset, request)
+        total_count = paginator.page.paginator.count
+
+        # Serialize queryset
+        serializer = serializers.AmountDisbursedListSerializer(result_page, many=True)
+        grid_data = serializer.data
+
+        # Return response
+        return Response({
+            "message": "SUCCESS",
+            "payload": {
+                "gridData": grid_data,
+                "totalCount": total_count
+            },
+            "status": "OK",
+            "statusCode": 200
+        })
+
+
+
+class LoanRepaymentListAPIView(APIView):
+
+    def post(self, request):
+        # entity = request.data.get('entity')
+        page = request.data.get('page', 1)
+        per_page = request.data.get('perPage', 100)
+        filters = request.data.get('filters', None)
+
+        default_filter = [
+                {
+                "field": "amount",
+                "value":0
+                },
+                {
+                    "field": "repayment_date",
+                    "value": get_date_yyyy_mm_dd()
+                },
+                {
+                    "field": "transaction_refernce",
+                    "value": ""
+                }
+            ]
+
+        if filters is not None and len(filters)< 1:
+            filters = default_filter
+        if filters is None:
+            filters = default_filter
+        
+        queryset = LoanRepayment.objects.all().order_by('-repayment_date')
+        for filter in filters:
+            field = filter['field']
+            value = filter['value']
+            if field == "repayment_date":
+                if value != "":
+                    queryset = queryset.filter(**{"repayment_date__year":value[0:4], "repayment_date__month":value[5:7], "repayment_date__day":value[8:]})            
+            if field == 'amount':
+                if int(value) > 0:
+                    queryset = queryset.filter(**{field: value})
+            if field == 'transaction_refernce':
+                if value != "":
+                    queryset = queryset.filter(**{field: value})
+        
+
+        # Paginate queryset
+        paginator = pagination.PageNumberPagination()
+        paginator.page_size = per_page
+        result_page = paginator.paginate_queryset(queryset, request)
+        total_count = paginator.page.paginator.count
+
+        # Serialize queryset
+        serializer = serializers.LoanRepaymentListSerializer(result_page, many=True)
+        grid_data = serializer.data
+
+        # Return response
+        return Response({
+            "message": "SUCCESS",
+            "payload": {
+                "gridData": grid_data,
+                "totalCount": total_count
+            },
+            "status": "OK",
+            "statusCode": 200
+        })
+
+
+
+
+
+
+class LoanApplicationListAPIView(APIView):
+
+    def post(self, request):
+        # entity = request.data.get('entity')
+        page = request.data.get('page', 1)
+        per_page = request.data.get('perPage', 100)        
+        filters = request.data.get('filters', None)
+
+        default_filter = [
+                {
+                "field": "loan_date",
+                "value": get_date_yyyy_mm_dd()
+                },
+                {
+                    "field": "loan_request_status",
+                    "value": "PENDING"
+                },
+                {
+                    "field": "amount_requested",
+                    "value": 10000000
+                }
+            ]
+
+        if filters is not None and len(filters)< 1:
+            filters = default_filter
+        if filters is None:
+            filters = default_filter
+        
+
+
+        # Apply filters to queryset
+        queryset = UserLoan.objects.all()
+
+        try:
+            for filter in filters:
+                field = filter['field']
+                value = filter['value']
+                if field == "amount_requested" and value == int(10000000):
+                    queryset = queryset.filter(**{"amount_requested__lte": 3000000.00})
+                    print("i am hereeee")
+                else:
+                    queryset = queryset.filter(**{field: value})
+
+            # print(queryset, value, field)
+        except Exception as e:
+            return Response(({
+                "message": str(e),
+                "payload": {
+                    "gridData": [],
+                    "totalCount": 0
+                },
+                "status": "BAD_REQUEST",
+                "statusCode": 400
+            }), status=status.HTTP_400_BAD_REQUEST)
+        paginator = pagination.PageNumberPagination()
+        paginator.page_size = per_page
+        result_page = paginator.paginate_queryset(queryset, request)
+        total_count = paginator.page.paginator.count
+
+  
+        serializer = serializers.LoanApplicationListSerializer(result_page, many=True)
+        grid_data = serializer.data
+
+        # Return response
+        return Response({
+            "message": "SUCCESS",
+            "payload": {
+                "gridData": grid_data,
+                "totalCount": total_count
+            },
+            "status": "OK",
+            "statusCode": 200
+        })
+
+class ClientListAPIView(APIView):
+
+    def post(self, request):
+        # entity = request.data.get('entity')
+        page = request.data.get('page', 1)
+        per_page = request.data.get('perPage', 100)
+        filters = request.data.get('filters', None)
+
+        default_filter = [
+                {
+                "field": "first_name",
+                "value":""
+                },
+                {
+                    "field": "last_name",
+                    "value": ""
+                },
+                {
+                    "field": "email",
+                    "value": ""
+                }
+            ]
+
+        if filters is not None and len(filters)< 1:
+            filters = default_filter
+        if filters is None:
+            filters = default_filter
+        
+
+        # Apply filters to queryset
+        queryset = CustomUser.objects.all()
+        for filter in filters:
+            field = filter['field']
+            value = filter['value']
+            if value != "":
+                queryset = queryset.filter(**{field: value})
+
+        # Paginate queryset
+        paginator = pagination.PageNumberPagination()
+        paginator.page_size = per_page
+        result_page = paginator.paginate_queryset(queryset, request)
+        total_count = paginator.page.paginator.count
+
+        # Serialize queryset
+        serializer = serializers.userListSerializer(result_page, many=True)
+        grid_data = serializer.data
+
+        # Return response
+        return Response({
+            "message": "SUCCESS",
+            "payload": {
+                "gridData": grid_data,
+                "totalCount": total_count
+            },
+            "status": "OK",
+            "statusCode": 200
+        })
+
+
+class AdminLoginAPIView(APIView):
+    permission_classes = (AllowAny,)
+    serializer_class = serializers.AdminLoginSerializer
+    def post(self, request):
+
+        return Response({"status":True, "detail":serializers.data}, status.HTTP_200_OK)
 
 
 
