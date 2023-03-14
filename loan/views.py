@@ -86,7 +86,7 @@ class RepayLoan(APIView):
                     data = {
                         "amount_payed" : serializer.validated_data["amount"],
                         "amount_left": Decimal(0) if money_left <= 0 else money_left,
-                        "details":loan_exists.get_loan_default_details
+                        "detail":loan_exists.get_loan_default_details
                     }
                     return Response({"detail":"success", "data":data, "status":True}, status.HTTP_200_OK)
                 else:
@@ -94,17 +94,6 @@ class RepayLoan(APIView):
 
             else:
                 return Response({"detail":"You dont have an outstanding loan", "data":{}, "status":False}, status.HTTP_400_BAD_REQUEST)
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -194,7 +183,7 @@ class GuarnteeListView(APIView):
             serializer = self.serializer_class(our_guarantee)
             return Response({"detail":"success", "data":serializer.data, "status":True}, status.HTTP_200_OK)
         except Exception as e:
-            return Response({"details":str(e), "status":False}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":str(e), "status":False}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -208,7 +197,7 @@ class HomePageListView(APIView):
             serializer = HomePagePromotionSerializer(home_page_promotion)
             return Response({"detail":"success", "data":serializer.data, "status":True}, status.HTTP_200_OK)
         except Exception as e:
-            return Response({"details":str(e), "status":False}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":str(e), "status":False}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -222,7 +211,7 @@ class RepaymentGuideListView(APIView):
             serializer = self.serializer_class(repayment_guide, many=True)
             return Response({"detail":"success", "data":serializer.data, "status":True}, status.HTTP_200_OK)
         except Exception as e:
-            return Response({"details":str(e), "status":False}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":str(e), "status":False}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
