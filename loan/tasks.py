@@ -15,7 +15,7 @@ def update_defaulters_new_balance():
             amount_per_day = (interest_percentage*dl.amount_left)/100
             new = amount_per_day/loan_days
             dl.accumulated_amount = dl.accumulated_amount + new
-            dl.last_accumulate_date=timezone.now().date()
+            dl.last_accumulate_date=timezone.now()
             dl.save()
 
         except Exception as e:

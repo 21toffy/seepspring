@@ -164,7 +164,8 @@ class UserLoan(BaseModel):
     number_of_default_days = models.IntegerField(default=0)
     amount_left = models.DecimalField(default=0.00, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
     accumulated_amount = models.DecimalField(default=0.00, decimal_places=constants.DECIMAL_PLACES, max_digits=constants.MAX_DIGITS)
-    last_accumulate_date = models.DateField(default=timezone.now().date())
+    # last_accumulate_date = models.DateField(default=timezone.now().date())
+    last_accumulate_date = models.DateField(default=timezone.now)
     
     def __str__(self):
         return str(self.user) + " is owing? " + str(self.get_loan_default_details["eligible_to_collect_loan"])
