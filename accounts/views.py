@@ -313,10 +313,7 @@ class GenerateOtpView(APIView):
             }
             return Response({"auth_status":1,"detail":"Token generated successfully, this is a test message", "details":results, "status":True}, status.HTTP_200_OK)
         return Response({"detail":serializer.errors,  "status":False}, status.HTTP_400_BAD_REQUEST)
-        
     
-
-
 class EmploymentDurationListView(APIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = EmploymentDurationCreationSerializer
@@ -412,20 +409,6 @@ class UserRegistration(APIView):
             res = {"detail": respo, "status": False}
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
-    # def get(self,request,pk):
-    #     book_obj=Book.objects.filter(pk=pk).first()
-    #     bs=BookSerializers(book_obj)
-    #     return Response(bs.data)
- 
-    # def put(self,request,pk):
-    #     book_obj=Book.objects.filter(pk=pk).first()
-    #              bs=BookSerializers(book_obj,data=request.data)
-    #     if bs.is_valid():
-    #         bs.save()
-    #         return Response(bs.data)
-    #     else:
-    #         return HttpResponse(bs.errors)
-
     def bvn_pull(data):
         mocked=True
         if mocked:
@@ -443,61 +426,6 @@ class UserRegistration(APIView):
         else:
             #logic for live data
             pass
-
-
-    # def post(self, request, format=None):
-    #     user_serializer = UserRegistrationSerializer(data=request.data['personal_information'])
-    #     # user_serializer = UserRegistrationSerializer(data=self.bvn_pull(request.data["personal_information"]))        
-    #     employment_serializer = EmploymentinformationCreationSerializer(data=request.data['employment_information'])        
-    #     emergency_contact_serializer = EmergencyContactCreationSerializer(data=request.data['emergency_contact'])
-    #     colleague_contact_serializer = ColleagueContactCreationSerializer(data=request.data['colleague_contact'])        
-    #     bank_details_serializer = BankAccountDetailsCreationSerializer(data=request.data['bank_details'])
-    #     try:
-    #         if user_serializer.is_valid():
-    #             with transaction.atomic():
-    #                 personal_information_object = user_serializer.save()
-    #                 group, created = Group.objects.get_or_create(name="client")
-    #                 personal_information_object.groups.add(group)
-    #             if employment_serializer.is_valid():
-    #                 employment_duration_object = EmploymentDuration.objects.filter(id = request.data['eployment_duration_details']["employment_duration"]).first()
-    #                 salary_range_object = SalaryRange.objects.filter(id = request.data['salary_range_details']["salary_range"]).first()
-                    
-    #                 employment_serializer.save(user = personal_information_object, employment_duration  = employment_duration_object , salary_range=salary_range_object )
-    #                 if emergency_contact_serializer.is_valid():
-    #                     emergency_contact_serializer.save(user = personal_information_object)   
-    #                     if colleague_contact_serializer.is_valid():
-    #                         colleague_contact_serializer.save(user = personal_information_object)
-    #                         if bank_details_serializer.is_valid():
-    #                             bank_details_serializer.save(user = personal_information_object)
-    #                             return Response({"detail": True, "data":user_serializer.data , "status":status.HTTP_201_CREATED}, status=status.HTTP_201_CREATED)
-    #                         else:
-    #                             personal_information_object.delete()
-    #                             return Response(bank_details_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    #                     else:
-    #                         personal_information_object.delete()
-    #                         return Response(colleague_contact_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    #                 else:
-    #                     personal_information_object.delete()
-    #                     return Response(emergency_contact_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    #             else:
-    #                 personal_information_object.delete()
-    #                 return Response(employment_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    #         else:
-    #             try:
-    #                 personal_information_object.delete()
-    #             except:
-    #                 pass
-    #             return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    #     except LookupError as ke:
-    #         try:
-    #             personal_information_object.delete()
-    #         except UnboundLocalError:
-    #             x = str(ke)[1:len(str(ke)) -1 ]
-    #             return Response({x:[f" {x} can not be empty"]}, status=status.HTTP_400_BAD_REQUEST)
-            
-    #         x = str(ke)[1:len(str(ke)) -1 ]
-    #         return Response({x:[f" {x} field can not be empty"]}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 
@@ -616,64 +544,7 @@ class UserProfileAPIView(APIView):
         _ColleagueContactCreationSerializer = ColleagueContactGetSerializer(_ColleagueContact)
         _BankAccountDetailsCreationSerializer = BankAccountDetailsGetSerializer(_BankAccountDetails)
         z = {"user_details":user_serializer.data, "eployment_duration":_UserEmploymentDurationCreationSerializer.data, "ralary_range":_UserSalaryRangeCreationSerializer.data, "employment_information":_EmploymentinformationCreationSerializer.data,"emergency_contact":_EmergencyContactCreationSerializer.data, "colleague_contact":_ColleagueContactCreationSerializer.data, "bank_details":_BankAccountDetailsCreationSerializer.data}
-        return Response(data={"detail":z, "status":True}, status=status.HTTP_200_OK)
-
-
-
-# class UserLoanProfileAPIView(APIView):
-#     # serializer_class = LogoutSerializer
-#     permission_classes = (IsAuthenticated,)
-
-#     def get(self, request, *args, **kwargs):
-#         try:
-#             available_loan = UserLoan.objects.filter(
-#                 Q(paid=False) |
-#                 Q(active=False) |
-#                 Q(user=request.user)).first()
-#             loan_interest = Interest.objects.filter(id = available_loan.interest.id).first()
-#         except AttributeError:
-#             response = {
-#             'status': True,
-#             'message': 'use loan profile fetched successfully',
-#             'detail': {"eligible_to_collect_loan": False},
-#             }
-#             return Response(response, status=status.HTTP_200_OK)
-
-#         if available_loan:
-#             user_loan_dictionary = {
-#                 "eligible_to_collect_loan": False,
-#                  "user":available_loan.user.id,
-#                  "id":available_loan.id,
-#                 "loan_request_status":available_loan.loan_request_status,
-#                 "amount_requested":available_loan.amount_requested,
-#                 "amount_disbursed":available_loan.amount_disbursed,
-#                 "amount_owed":available_loan.amount_left,
-#                 "loan_date":available_loan.loan_date,
-#                 "loan_due_date":available_loan.loan_due_date,
-#                 "interest":{
-#                             "id":loan_interest.id,
-#                             "vat":loan_interest.vat,
-#                             "service_charge":loan_interest.service_charge,
-#                             "interest":loan_interest.interest,
-#                 }
-#             }
-
-#             response = {
-#             'status': True,
-#             'message': 'user loan profile fetched successfully',
-#             'detail': user_loan_dictionary,
-#             }
-
-#             return Response(response, status=status.HTTP_200_OK)
-#         else:
-#             response = {
-#             'status': True,
-#             'message': 'use loan profile fetched successfully',
-#             'detail': available_loan.get_loan_default_details,
-#             }
-#             return Response(response, status=status.HTTP_200_OK)
-
-
+        return Response({"detail":z, "status":True}, status=status.HTTP_200_OK)
 
 
 
@@ -698,13 +569,6 @@ class UserLoanProfileAPIView(APIView):
             print("is not none")
 
             loan_interest = Interest.objects.filter(id = available_loan.interest.id).first()
-        # except AttributeError:
-        #     response = {
-        #     'status': True,
-        #     'message': 'use loan profile fetched successfully',
-        #     'detail': {"eligible_to_collect_loan": False},
-        #     }
-        #     return Response(response, status=status.HTTP_200_OK)
 
         if available_loan:
             user_loan_dictionary = {

@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (
-    Interest, LoanLevel, UserLoan, LoanRepayment, LoanPurpose, Guarntee, InterestBreakdown, HomePagePromotion, RepaymentGuide,LoanPageInformationSlider
+    Interest, LoanLevel, UserLoan, LoanRepayment, LoanPurpose, Guarntee, InterestBreakdown, HomePagePromotion, RepaymentGuide,LoanPageInformationSlider, AmountDisbursed
 )
 
 
@@ -15,6 +15,11 @@ admin.site.register(InterestBreakdown)
 admin.site.register(HomePagePromotion)
 admin.site.register(RepaymentGuide)
 admin.site.register(LoanPageInformationSlider)
+admin.site.register(AmountDisbursed)
+
+
+
+
 
 
 
