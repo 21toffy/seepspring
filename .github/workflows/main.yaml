@@ -19,28 +19,3 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
           
-      # - name: Copy files to server
-        # run: ls
-        # run: echo "+++++++++++++++++++++++=="
-
-        # run: sudo scp -r . ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_IP }}:/seepspring
-      # - name: Install ssh-keyscan
-      #   run: sudo apt-get install openssh-client
-
-      # - name: Change permission
-      #   run: chmod 700 $HOME/.ssh && chmod 600 $HOME/.ssh/*
-
-      # - name: Scan server key
-      #   run: ssh-keyscan ${{ secrets.SERVER_HOST }} ~/.ssh/known_hosts
-
-      - name: Connect to server and deploy code
-        run: |
-          ssh -i {{ secrets.SERVER_SSH_KEY }} {{ secrets.SERVER_USERNAME }}@{{ secrets.SERVER_HOST }} << EOF
-            cd /seepspring
-            docker compose down
-
-          EOF
-          
-    env:
-      SERVER_HOST: ${{ secrets.SERVER_HOST }}
-      SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
