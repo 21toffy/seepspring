@@ -27,7 +27,7 @@ jobs:
         
       - name: Connect to server and deploy code
         run: |
-          ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} << EOF
+          ssh tofunmi@${{ secrets.SERVER_HOST }} << EOF
             cd /seepspring
             docker compose down
 
