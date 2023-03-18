@@ -21,11 +21,8 @@ jobs:
     
       - name: Connect to server and deploy code
         run: |
-          ssh ${SERVER_USERNAME}@${SERVER_HOST} << EOF
-            cd /seepspring
-            docker compose down
-          EOF
-        env:
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
-          SSH_AUTH_SOCK: ${{ env.SSH_AUTH_SOCK }}
+          ssh ${SERVER_USERNAME}@${SERVER_HOST} "cd /seepspring && ls"
+          
+    env:
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
