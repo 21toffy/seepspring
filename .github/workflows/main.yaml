@@ -15,14 +15,50 @@ jobs:
         uses: actions/checkout@v2
         
       - name: Set up SSH connection to server
-        uses: webfactory/ssh-agent@v0.5.0
-        with:
-          ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+        run: |
+          echo ${{ secrets.SERVER_HOST }}
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 400 ~/.ssh/id_rsa
     
       - name: Connect to server and deploy code
         run: |
-          ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd /seepspring && ls"
+          ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd /seepspring && docker compose down"
           
     env:
       SERVER_HOST: ${{ secrets.SERVER_HOST }}
       SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+      SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+
+
+
+# name: Deploy to Linux Server
+
+# on:
+#   workflow_dispatch:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+    
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+        
+#       - name: Set up SSH connection to server
+#         uses: webfactory/ssh-agent@v0.5.0
+#         with:
+#           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+    
+#       - name: Connect to server and deploy code
+#         run: |
+#           ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd /seepspring && ls"
+          
+#     env:
+#       SERVER_HOST: ${{ secrets.SERVER_HOST }}
+#       SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
