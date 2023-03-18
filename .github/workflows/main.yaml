@@ -21,7 +21,7 @@ jobs:
           
       - name: Copy files to server
         run: ls
-        run: echo "+++++++++++++++++++++++=="
+        # run: echo "+++++++++++++++++++++++=="
 
         # run: sudo scp -r ./seepspring ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_IP }}:/seepspring
         
