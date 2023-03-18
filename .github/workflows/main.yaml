@@ -25,7 +25,7 @@ jobs:
 
         # run: sudo scp -r . ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_IP }}:/seepspring
       - name: Install ssh-keyscan
-      run: sudo apt-get install -y ssh-keyscan
+        run: sudo apt-get install -y ssh-keyscan
 
       - name: Scan server key
         run: ssh-keyscan ${{ secrets.SERVER_HOST }} ~/.ssh/known_hosts
