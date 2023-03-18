@@ -20,7 +20,10 @@ jobs:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
           
       - name: Copy files to server
-        run: sudo scp -r ./seepspring ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_IP }}:/seepspring
+        run: ls
+        run: echo "+++++++++++++++++++++++=="
+
+        # run: sudo scp -r ./seepspring ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_IP }}:/seepspring
         
       - name: Connect to server and deploy code
         run: |
