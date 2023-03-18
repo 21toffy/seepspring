@@ -24,7 +24,12 @@ jobs:
         # run: echo "+++++++++++++++++++++++=="
 
         # run: sudo scp -r . ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_IP }}:/seepspring
-        
+      - name: Install ssh-keyscan
+      run: sudo apt-get install -y ssh-keyscan
+
+      - name: Scan server key
+        run: ssh-keyscan ${{ secrets.SERVER_HOST }} ~/.ssh/known_hosts
+
       - name: Connect to server and deploy code
         run: |
           ssh tofunmi@${{ secrets.SERVER_HOST }} << EOF
