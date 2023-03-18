@@ -536,7 +536,7 @@ class AdminDashboard(APIView):
         else:
             days = 'all'
 
-        if days is not 'all':
+        if days != 'all':
             print('not all')
             amount_requested = UserLoan.objects.filter(
             active = True, 
