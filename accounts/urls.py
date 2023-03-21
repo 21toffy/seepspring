@@ -19,7 +19,8 @@ from .views import (
     VerifyPhone,
     UserMinimalProfileAPIView,
     UserBankAccountCreateView,
-    UserBankAccountListView
+    UserBankAccountListView,
+    LoginUserView
 )
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -30,6 +31,9 @@ app_name = 'accounts'
 urlpatterns = [
     path('register',UserRegistration.as_view(), name='register'),
     path('login', LoginAPIView.as_view(), name="login"),
+    path('login-user', LoginUserView.as_view(), name="login"),
+
+    
     # path('register/', RegisterView.as_view(), name="register"),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('logout/', LogoutAPIView.as_view(), name="logout"),

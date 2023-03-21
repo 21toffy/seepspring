@@ -1,20 +1,18 @@
 from datetime import datetime
 from django.shortcuts import render
-
 from accounts.models import CustomUser
 from loan.models import UserLoan, LoanRepayment, AmountDisbursed
 from . import serializers
-
 from common import constants
-from common.utils import get_date_yyyy_mm_dd, convert__to_datetime, get_current_month_as_string
-
+from common.utils import get_date_yyyy_mm_dd, get_first_serializer_error
 from django.db.models import Q
-from rest_framework.exceptions import ValidationError
+from common.messages import (
+    eployee_creation_email_subject
+) 
+from django.conf import settings
 
 from rest_framework import generics
-
-
-
+from django.core.mail import send_mail
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 from rest_framework.views import APIView
@@ -24,6 +22,66 @@ from decimal import *
 from django.db.models import Sum
 from django.db.models import Q
 from rest_framework import pagination
+from django.db import transaction
+
+from common.email_utils import send_email, SendChampEmailSender
+
+ 
+class EmployeeCreation(APIView):
+    permission_classes = (AllowAny,)
+    email = "sendchamp"
+    # email = "custom"
+
+    # serializer_class = GlobalAccountListSerializer
+
+    @transaction.atomic
+    def post(self,request,*args,**kwargs):
+        us=serializers.EmployeeCreationSerializer(data=request.data["user_details"],many=False)
+
+        if us.is_valid():
+            user = us.save()
+            es = serializers.EmployeeSerializer(data=request.data["employee_details"], context={'request': request, 'user': user})
+            if es.is_valid():
+                x = es.save()
+                if self.email == "sendchamp":
+                    sender = SendChampEmailSender()
+                    response = sender.send_email(
+                        subject=eployee_creation_email_subject,
+                        to_email=us.validated_data["email"],
+                        to_name=us.validated_data["first_name"],
+                        from_email=settings.ADMIN_EMAIL,
+                        from_name="Admin",
+                        message_body_type= "text",
+                        message_body_value = f"Hello, '{user.first_name}' welcome to Kulucash, your password is '{x.default_passsword}'. Please login to change"
+                    )
+
+                    if response["code"] != 200:
+                        user.delete()
+                        x.delete()
+                        return Response({"detail":response["message"],"message":response["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
+                    else:
+                        return Response({"detail":"account created successfully","message":"account created successfully", "status":True}, status.HTTP_200_OK)
+
+                else:
+                    send_email(
+                        subject=eployee_creation_email_subject,
+                        to_email=us.validated_data["email"],
+                        context={'user': user},
+                        template_name='email/employee_creation_notification.html'
+                    )
+                    print(send_email, "00000000000000000000000000000000000000000000000000")
+
+            return Response({"detail":get_first_serializer_error(es.errors), "status":False}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            errors = us.errors
+            string = (str(errors))
+            respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1] 
+            res = {"detail": respo, "status": False}
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
 
 
 

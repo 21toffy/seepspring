@@ -10,6 +10,8 @@ import json
 from seepspring.settings import(
     SENDCHAMP_SENDER_ID
 )
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from loan.models import Interest, UserLoan
 
@@ -25,6 +27,7 @@ from .serializers import (
     UserSalaryRangeCreationSerializer,
     LoginSerializer,
     LogoutSerializer,
+    LoginUserSerializer,
 
     EmploymentinformationCreationSerializer,
     EmergencyContactCreationSerializer,
@@ -72,9 +75,7 @@ class CustomToken(jwt_views.TokenObtainPairView):
 
 
 from rest_framework import exceptions
-from common.utils import (generate_token, generate_four_random_digits,
-# openconfig
- )
+from common.utils import (generate_token, generate_four_random_digits, get_international_number, custom_serializer_error)
 from django.contrib import auth
 import requests
 
@@ -209,7 +210,7 @@ class SendOTPToPhone(APIView):
 
         random_numbers=generate_four_random_digits()
         built_data = {
-                    "to": phone,
+                    "to": get_international_number(phone),
                     "message": f"Hello your OTP to create an account with us is {random_numbers}",
                     # "sender_name": openconfig()['sendchamp']['sender_id'],
                     "sender_name": SENDCHAMP_SENDER_ID,
@@ -221,19 +222,19 @@ class SendOTPToPhone(APIView):
                 from datetime import datetime, timedelta
                 time_difference = datetime.now() - check_number.updated_at.replace(tzinfo=None)
                 if time_difference  < timedelta(seconds=120):
-                    return Response({"detail":wait_two_minutes, "status":False}, status.HTTP_400_BAD_REQUEST)
-                if time_difference > timedelta(seconds=240) and check_number.count > 3:
-                    return Response({"detail":wait_4_minutes, "status":False}, status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail":wait_two_minutes,"message":wait_two_minutes, "status":False}, status.HTTP_400_BAD_REQUEST)
+                if time_difference < timedelta(seconds=240) and check_number.count > 3:
+                    return Response({"detail":wait_4_minutes,"message":wait_4_minutes, "status":False}, status.HTTP_400_BAD_REQUEST)
 
                 send_otp = self.send_sms_logic(built_data)
                 check_number.code = random_numbers
                 check_number.is_deleted = False
                 check_number.count = check_number.count + 1
                 check_number.save()
-                if send_otp["code"] != 200:   
-                    return Response({"detail":send_otp["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
+                if send_otp["code"] != 200: 
+                    return Response({"detail":send_otp["message"],"message":send_otp["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
                 else:
-                    return Response({"detail":otp_sent_success, "status":True}, status.HTTP_200_OK)
+                    return Response({"detail":otp_sent_success,"message":otp_sent_success, "status":True}, status.HTTP_200_OK)
 
             else:
                 try:
@@ -241,15 +242,15 @@ class SendOTPToPhone(APIView):
                     send_otp = self.send_sms_logic(built_data)
                     if send_otp["status"] != 200:   
                         if self.mock == True:
-                            return Response({"detail":otp_sent_success, "status":True}, status.HTTP_200_OK)
-                        return Response({"detail":send_otp["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
+                            return Response({"detail":otp_sent_success,"message":otp_sent_success, "status":True}, status.HTTP_200_OK)
+                        return Response({"detail":send_otp["message"],"message":send_otp["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
                     else:
                         
-                        return Response({"detail":otp_sent_success, "status":True}, status.HTTP_200_OK)
+                        return Response({"detail":otp_sent_success,"message":otp_sent_success, "status":True}, status.HTTP_200_OK)
                 except Exception as e:
-                    return Response({"detail":str(e), "status":False}, status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail":str(e), "message":str(e), "status":False}, status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({"detail":"phone number field can not be empty", "status":False}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":"phone number field can not be empty","message":"phone number field can not be empty", "status":False}, status.HTTP_400_BAD_REQUEST)
             
 
 
@@ -308,8 +309,10 @@ class GenerateOtpView(APIView):
                 raise exceptions.AuthenticationFailed('Auauthorized to view this')
             if not user.groups.filter(name="admin"):
                 raise exceptions.AuthenticationFailed('Auauthorized to view this')
+            otp_gen = generate_token(phone_number)
+            print(otp_gen, 12345)
             results = {
-                'otp': generate_token(phone_number)
+                'otp': otp_gen
             }
             return Response({"auth_status":1,"detail":"Token generated successfully, this is a test message", "details":results, "status":True}, status.HTTP_200_OK)
         return Response({"detail":serializer.errors,  "status":False}, status.HTTP_400_BAD_REQUEST)
@@ -354,10 +357,15 @@ class UserBankAccountCreateView(APIView):
 
 
 
+# get the bvn from front
+# do the bvn pull
+# populate bvn model
+# populate user field
+
 class UserRegistration(APIView):
     permission_classes = (AllowAny,)
     # serializer_class = GlobalAccountListSerializer
-
+ 
     # @transaction.atomic
     def post(self,request,*args,**kwargs):
         us=UserRegistrationSerializer(data=request.data,many=False)
@@ -471,6 +479,32 @@ class ChangePasswordView(generics.UpdateAPIView):
 
 
 
+class LoginUserView(APIView):
+    def post(self, request, *args, **kwargs):
+        
+        serializer = LoginUserSerializer(data =request.data)
+        if serializer.is_valid():
+            phone_number = request.data["phone_number"]
+            password = request.data["password"]
+            user_profile = CustomUser.objects.filter(phone_number=phone_number).first()
+            correct_password = user_profile.check_password(password)            
+            if correct_password:
+                if user_profile is None:
+                    return Response({"message":"You do not have an account", "detail":"You do not have an account", "status":False,}, status=status.HTTP_401_UNAUTHORIZED )
+                access_token = AccessToken.for_user(user_profile)
+                refresh_token = RefreshToken.for_user(user_profile)
+                return Response(
+                    {'access_token': str(access_token),
+                    'refresh_token': str(refresh_token),
+                    "phone_number":user_profile.phone_number,
+                    "status": True
+                 })
+            else:
+
+                return Response({'message': 'No active account found with the given credentials', "data":{}, "status":False}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({"message":custom_serializer_error(serializer.errors), "data":{}, "status":False}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class LoginAPIView(APIView):
     permission_classes = (AllowAny,)
     serializer_class = LoginSerializer
@@ -566,7 +600,6 @@ class UserLoanProfileAPIView(APIView):
                 Q(active=False) |
                 Q(user=request.user)).first()
         if available_loan:
-            print("is not none")
 
             loan_interest = Interest.objects.filter(id = available_loan.interest.id).first()
 

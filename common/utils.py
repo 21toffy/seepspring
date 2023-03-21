@@ -45,11 +45,15 @@ def generate_token(phone):
 
     except Exception as e:
         return 12345
-def custom_serializer_error(error):
-    errors = error
-    string = (str(errors))
-    respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1]
-    return respo
+def custom_serializer_error(error) -> str:
+    # errors = error
+    # string = (str(errors))
+    # respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1]
+    # return respo
+    for i in error:
+        # Extract the error message
+        error_message = i + error[i][0][4:]
+    return error_message
 
 
 def generate_four_random_digits() -> int:
@@ -94,3 +98,23 @@ def get_current_month():
 def get_current_month_as_string():
     current_month_number = datetime.datetime.now().month
     return current_month_number
+
+
+import random  
+import string  
+def unique_string(length :int) -> str:  
+    letters = string.ascii_lowercase # define the specific string  
+    result = ''.join((random.sample(letters, length)))   
+    return result
+
+def unique_id() -> int:  
+    from random import randint
+    id = str(randint(1001, 99000))
+    return id
+
+
+
+def get_international_number(number: str) -> str:  
+    remove_zero = number[1:]
+    return "234" + remove_zero
+

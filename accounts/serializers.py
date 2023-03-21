@@ -25,6 +25,11 @@ class GetuserProfileSerializer(serializers.ModelSerializer):
 
 
 
+class LoginUserSerializer(serializers.Serializer):
+    phone_number = serializers.CharField()
+    password = serializers.CharField(style={'input_type': 'password'})
+
+
 
 
 # class UserRegistrationSerializer(serializers.ModelSerializer):

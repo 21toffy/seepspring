@@ -1,11 +1,57 @@
 from accounts.read_serializers import UserDetailsSerializer, UserRegistrationGetSerializer
 from common import constants
+from common.utils import unique_string
 from accounts.models import (CustomUser)
 from rest_framework import serializers
 
 from loan.models import LoanLevel, UserLoan, LoanRepayment, AmountDisbursed
 from loan.serializers import InterestSerializer
 
+# serializers.py
+from .models import Employee
+
+class EmployeeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employee
+        fields = ['user', 'department', 'role', 'default_passsword']
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['user']
+        default_password = unique_string(6)
+        validated_data['default_passsword'] = default_password
+
+        employee_object = Employee.objects.create(**validated_data)
+        return employee_object
+
+
+class EmployeeCreationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+
+        extra_kwargs = {'password': {'write_only': True}}
+
+        fields = [
+            "email",
+            "phone_number",        
+            "first_name",
+            "last_name",
+        ]
+    def create(self, validated_data):
+        # create user 
+        user = CustomUser.objects.create(
+            email = validated_data['email'],
+            phone_number = validated_data['phone_number'],
+            first_name = validated_data.get("first_name", "First name"),
+            last_name = validated_data.get("last_name", "Last name"),
+            role = validated_data.get("role", "reconciliation_officer"),
+
+        )
+
+        if user.password is not None:
+            user.set_password(validated_data['phone_number'])
+            user.save()
+        
+        return user
 
 
 class LoanRepaymentSerializer(serializers.ModelSerializer):

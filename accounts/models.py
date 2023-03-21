@@ -9,6 +9,7 @@ from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 from common import constants
 from django.db.models import Q
+from common.utils import unique_string ,unique_id
 
 
 from .managers import CustomUserManager
@@ -53,15 +54,19 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
           ('superadmin', 'superadmin'),  
           ('accountant', 'accountant'),         
           ('reconciliation_officer', 'reconciliation_officer'),
-          ('customer', 'customer'),       
+          ('telemarketing', 'telemarketing'),
+          ('verification', 'verification'),    
+          ('collection', 'collection'),    
+          ('customer_service', 'customer_service'),  
+          ('accountant', 'accountant'),    
 
     )
 
 
     email = models.EmailField(_('email address'), unique=True)
     phone_number = models.CharField(_('phone number'), unique=True, max_length=14, validators=[validate_mobile_num])
-     
     first_name = models.CharField(max_length=100, null=True, blank=True)
+    public_id = models.CharField(max_length=100, unique=True,editable=False, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
     middle_name = models.CharField(max_length=100, null=True, blank=True)
     gender = models.CharField(max_length=10, choices=choice_gender)
@@ -76,8 +81,6 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     bvn_address = models.CharField(max_length=255, null=True, blank=True)
     state_of_origin = models.CharField(max_length=300, null=True, blank=True)
     state_of_residence = models.CharField(max_length=300, null=True, blank=True)
-
-
     city = models.CharField(max_length=300, null=True, blank=True)
     education = models.CharField(max_length=225, null=True, blank=True)
     current_address = models.CharField(max_length=225, null=True, blank=True)
@@ -119,6 +122,10 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
             'refresh': str(refresh),
             'access': str(refresh.access_token)
         }
+    def save(self, *args, **kwargs):
+        if not self.public_id:
+            self.public_id = unique_id()
+        return super(CustomUser, self).save(*args, **kwargs)
 
 class BvnData(BaseModel):
     user = models.ForeignKey(CustomUser, null=True, blank=True, on_delete=models.CASCADE)

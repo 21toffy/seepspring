@@ -11,7 +11,8 @@ LoanApplicationListAPIView,
 LoanRepaymentListAPIView,
 AmountDisbursedListAPIView,
 PendingListAPIViewListAPIView,
-UserLoanDetailView
+UserLoanDetailView,
+EmployeeCreation
 )
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -31,6 +32,8 @@ urlpatterns = [
     path('loan-repayment-list', LoanRepaymentListAPIView.as_view(), name='loan_replay_list'),
     path('loan-disbursed-list', AmountDisbursedListAPIView.as_view(), name='loan_disbursed_list'),
     path('pending-loan-list', PendingListAPIViewListAPIView.as_view(), name='pending_loan_list'),
+    path('employee-creation', EmployeeCreation.as_view(), name='employee-creation'),
+
     path('loan-details/<str:pk>/', UserLoanDetailView.as_view(), name='user_loan_detail'),
 
 
