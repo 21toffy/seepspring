@@ -48,7 +48,16 @@ class GetBVN(object):
         except Exception as e:
             return  e
 
+import logging
 
+logger = logging.getLogger(__name__)
+logger = logging.getLogger('sendchamp_logs')
+logger.setLevel(logging.DEBUG)
+fh = logging.FileHandler('sendchamp_logs.log')
+fh.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
 
 class SendSMS:
     def __init__(self, payload: dict) -> None:
@@ -88,7 +97,18 @@ class SendSMS:
     
     def send_otp(self) ->dict:
         try:
+
             response = requests.post(self.url, json=self.payload, headers=self.get_headers())
+            # print("url", self.url)
+            # print("payload", self.payload)
+            # print("headers", self.get_headers())
+            # print("response", response.json())
+            logger.debug(f"URL: {str(self.url)}")
+            logger.debug(f"payload: {str(self.payload)}")
+            logger.debug(f"headers: {str(self.get_headers())}")
+            logger.debug(f"response: {str(response.json())}")
+
+
             return response.json()
         except Exception as e:
             print(str(e))

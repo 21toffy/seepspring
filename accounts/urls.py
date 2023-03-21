@@ -20,7 +20,8 @@ from .views import (
     UserMinimalProfileAPIView,
     UserBankAccountCreateView,
     UserBankAccountListView,
-    LoginUserView
+    LoginUserView,
+    DummySendOTPToPhone
 )
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -55,6 +56,9 @@ urlpatterns = [
     path("verify-account-number", VerifyAccountNumber.as_view(), name="verify_account_number"),
 
     path("send-otp", SendOTPToPhone.as_view(), name="send_phone_number"),
+    path("dummy-send-otp", DummySendOTPToPhone.as_view(), name="dummy_send_otp"),
+
+    
 
 
     path("verify-otp", VerifyPhone.as_view(), name="verify_otp"),

@@ -2,3 +2,5 @@
 2023-03-21 22:48:51,553 - sendchamp_logs - DEBUG - payload: {'to': '2348104756718', 'message': 'Hello your OTP to create an account with us is 4753', 'sender_name': 'seepspring', 'route': 'non_dnd'}
 2023-03-21 22:48:51,553 - sendchamp_logs - DEBUG - headers: {'accept': 'application/json', 'content-type': 'application/json', 'Authorization': 'Bearer sendchamp_live_$2a$10$EMqyCE4.Hd/gzgbXLPY6PuTAs8QkQQTt0aDkXouyYJaBDQiKdy0Lu'}
 2023-03-21 22:48:51,553 - sendchamp_logs - DEBUG - response: {'code': 200, 'data': {'id': 'MN-SMS-ckAPtJCYWf', 'phone_number': '2348104756718', 'reference': 'MN-SMS-ckAPtJCYWf', 'status': 'processing'}, 'errors': None, 'message': 'processing', 'status': 'success'}
+
+
