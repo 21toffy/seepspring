@@ -86,6 +86,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from .messages import *
 from common.logic import (SendSMS, GetBVN)
+import logging
 
 
 
@@ -162,6 +163,8 @@ class UserBankAccountListView(APIView):
 
 
 class VerifyPhone(APIView):
+    mock = True
+
     def validate_otp(self, otp):
         if len(otp)!= 4:
             raise Exception("Invalid OTP")
@@ -171,102 +174,50 @@ class VerifyPhone(APIView):
         except Exception as e:
             return e
     def post(self, request):
-        otp = request.data.get("otp", None)
-        phone = request.data.get("phone", None)
-        if otp is None or phone is None:
-            return Response({"detail":f"OTP or Phone can not be empty" , "message":f"OTP or Phone can not be empty", "status":False}, status.HTTP_400_BAD_REQUEST)
-        try:
-            validate_mobile_num(phone)
-        except Exception as e:
-            return Response({"detail":f"{phone} is not a valid Phone number","message":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
-        try:
-            casted = self.validate_otp(otp)
-        except Exception as e:
-            return Response({"message":f"{otp} is an invalid OTP", "detail":f"{otp} is an invalid OTP","status":False}, status.HTTP_400_BAD_REQUEST)
-        check_numbers = OtpPhone.objects.filter(phone=phone, is_deleted=False)
-        if check_numbers:
-            for check_number in check_numbers:
-                saved_code = check_number.code
-                if saved_code == casted:
-                    check_number.is_deleted=True
-                    check_number.save()
-                    return Response({"detail":otp_match_success, "status":True}, status.HTTP_200_OK)
-                else:
-                    return Response({"detail":otp_match_failed, "message":otp_match_failed, "status":False}, status.HTTP_400_BAD_REQUEST)
-        return Response({"detail":no_otp,"message":no_otp, "status":False}, status.HTTP_400_BAD_REQUEST)
+        if self.mock:
+            otp = request.data.get("otp", None)
+            phone = request.data.get("phone", None)
+            if otp is None or phone is None:
+                return Response({"detail":f"OTP or Phone can not be empty" , "message":f"OTP or Phone can not be empty", "status":False}, status.HTTP_400_BAD_REQUEST)
+            try:
+                validate_mobile_num(phone)
+            except Exception as e:
+                return Response({"detail":f"{phone} is not a valid Phone number","message":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
+            try:
+                casted = self.validate_otp(otp)
+            except Exception as e:
+                return Response({"message":f"{otp} is an invalid OTP", "detail":f"{otp} is an invalid OTP","status":False}, status.HTTP_400_BAD_REQUEST)
+            if str(casted) == str(1234):
+                return Response({"detail":otp_match_success, "status":True}, status.HTTP_200_OK)
+            else:
+                return Response({"detail":otp_match_failed, "message":otp_match_failed, "status":False}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":no_otp,"message":no_otp, "status":False}, status.HTTP_400_BAD_REQUEST)
 
 
-import logging
-
-# class SendOTPToPhone(APIView):
-#     mock =False
-#     permission_classes = (AllowAny,)
-
-#     def send_sms_logic(self, data):
-#         initialize_sending = SendSMS(data)
-#         send_otp = initialize_sending.send_otp()
-#         return send_otp
-
-#     def post(self, request):
-#         logger = logging.getLogger(__name__)
-
-#         phone = request.data.get("phone", None)
-#         try:
-#             validate_mobile_num(phone)
-#         except Exception as e:
-#             logger.error(f"{phone} is not a valid Phone number")
-#             return Response({"detail":f"{phone} is not a valid Phone number", "message":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
-
-#         random_numbers=generate_four_random_digits()
-#         built_data = {
-#                     "to": get_international_number(phone),
-#                     "message": f"Hello your OTP to create an account with us is {random_numbers}",
-#                     # "sender_name": openconfig()['sendchamp']['sender_id'],
-#                     "sender_name": SENDCHAMP_SENDER_ID,
-#                     "route": "non_dnd"
-#                     }
-#         if phone:
-#             check_number = OtpPhone.objects.filter(phone=phone).last()
-#             if check_number:
-#                 from datetime import datetime, timedelta
-#                 time_difference = datetime.now() - check_number.updated_at.replace(tzinfo=None)
-#                 if time_difference  < timedelta(seconds=120):
-#                     logger.error(wait_two_minutes)
-#                     return Response({"detail":wait_two_minutes,"message":wait_two_minutes, "status":False}, status.HTTP_400_BAD_REQUEST)
-#                 if time_difference < timedelta(seconds=240) and check_number.count > 3:
-#                     logger.error(wait_4_minutes)
-#                     return Response({"detail":wait_4_minutes,"message":wait_4_minutes, "status":False}, status.HTTP_400_BAD_REQUEST)
-
-#                 send_otp = self.send_sms_logic(built_data)
-#                 check_number.code = random_numbers
-#                 check_number.is_deleted = False
-#                 check_number.count = check_number.count + 1
-#                 check_number.save()
-#                 if send_otp["code"] != 200: 
-#                     logger.error(send_otp["message"])
-#                     return Response({"detail":send_otp["message"],"message":send_otp["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
-#                 else:
-#                     logger.debug(otp_sent_success)
-#                     return Response({"detail":otp_sent_success,"message":otp_sent_success, "status":True}, status.HTTP_200_OK)
-
-#             else:
-#                 try:
-#                     logger.debug('send champ OTP')
-#                     OtpPhone.objects.create(phone=phone, count=1, code = random_numbers)
-#                     send_otp = self.send_sms_logic(built_data)
-#                     if send_otp["status"] != 200:   
-#                         if self.mock == True:
-#                             logger.debug(otp_sent_success)
-#                             return Response({"detail":otp_sent_success,"message":otp_sent_success, "status":True}, status.HTTP_200_OK)
-#                         logger.error(send_otp["message"])
-#                         return Response({"detail":send_otp["message"],"message":send_otp["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
-#                     else:
-#                         logger.debug(otp_sent_success)
-#                         return Response({"detail":otp_sent_success,"message":otp_sent_success, "status":True}, status.HTTP_200_OK)
-#                 except Exception as e:
-#                     logger.error(f"Error occurred while sending OTP to {phone}. Error details: {e}")
-#                     return Response({"detail":f"Error occurred while sending OTP to {phone}.", "message":"Error occurred while sending OTP to {phone}.", "status":False}, status.HTTP_400_BAD_REQUEST)
-
+        else:
+            otp = request.data.get("otp", None)
+            phone = request.data.get("phone", None)
+            if otp is None or phone is None:
+                return Response({"detail":f"OTP or Phone can not be empty" , "message":f"OTP or Phone can not be empty", "status":False}, status.HTTP_400_BAD_REQUEST)
+            try:
+                validate_mobile_num(phone)
+            except Exception as e:
+                return Response({"detail":f"{phone} is not a valid Phone number","message":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
+            try:
+                casted = self.validate_otp(otp)
+            except Exception as e:
+                return Response({"message":f"{otp} is an invalid OTP", "detail":f"{otp} is an invalid OTP","status":False}, status.HTTP_400_BAD_REQUEST)
+            check_numbers = OtpPhone.objects.filter(phone=phone, is_deleted=False)
+            if check_numbers:
+                for check_number in check_numbers:
+                    saved_code = check_number.code
+                    if saved_code == casted:
+                        check_number.is_deleted=True
+                        check_number.save()
+                        return Response({"detail":otp_match_success, "status":True}, status.HTTP_200_OK)
+                    else:
+                        return Response({"detail":otp_match_failed, "message":otp_match_failed, "status":False}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":no_otp,"message":no_otp, "status":False}, status.HTTP_400_BAD_REQUEST)
 
 
 logger = logging.getLogger('send_otp_logger')
@@ -276,11 +227,8 @@ fh.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 logger.addHandler(fh)
-
-# use the logger to log messages
-
 class SendOTPToPhone(APIView):
-    mock =False
+    mock =True
     permission_classes = (AllowAny,)
     def send_sms_logic(self, data):
         
@@ -289,61 +237,70 @@ class SendOTPToPhone(APIView):
         return send_otp
 
     def post(self, request):
-        
-        phone = request.data.get("phone", None)
-        try:
-            validate_mobile_num(phone)
-        except Exception as e:
-            logger.error(str(e))
-            return Response({"detail":f"{phone} is not a valid Phone number", "message":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
+        if self.mock:
+            phone = request.data.get("phone", None)
+            try:
+                validate_mobile_num(phone)
+            except Exception as e:
+                logger.error(f"from mock Data: {str(e)}")
+                return Response({"detail":f"{phone} is not a valid Phone number", "message":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
 
-        random_numbers=generate_four_random_digits()
-        built_data = {
-                    "to": get_international_number(phone),
-                    "message": f"Hello your OTP to create an account with us is {random_numbers}",
-                    # "sender_name": openconfig()['sendchamp']['sender_id'],
-                    "sender_name": SENDCHAMP_SENDER_ID,
-                    "route": "non_dnd"
-                    }
-        if phone:
-            check_number = OtpPhone.objects.filter(phone=phone).last()
-            if check_number:
-                from datetime import datetime, timedelta
-                time_difference = datetime.now() - check_number.updated_at.replace(tzinfo=None)
-                if time_difference  < timedelta(seconds=120):
-                    return Response({"detail":wait_two_minutes,"message":wait_two_minutes, "status":False}, status.HTTP_400_BAD_REQUEST)
-                if time_difference < timedelta(seconds=240) and check_number.count > 3:
-                    return Response({"detail":wait_4_minutes,"message":wait_4_minutes, "status":False}, status.HTTP_400_BAD_REQUEST)
+            return Response({"detail":"otp sent sccessfully","message":"otp sent sccessfully", "status":True}, status.HTTP_200_OK)
+        else:
+            phone = request.data.get("phone", None)
+            try:
+                validate_mobile_num(phone)
+            except Exception as e:
+                logger.error(str(e))
+                return Response({"detail":f"{phone} is not a valid Phone number", "message":f"{phone} is not a valid Phone number", "status":False}, status.HTTP_400_BAD_REQUEST)
 
-                send_otp = self.send_sms_logic(built_data)
-                check_number.code = random_numbers
-                check_number.is_deleted = False
-                check_number.count = check_number.count + 1
-                check_number.save()
-                if send_otp["code"] != 200: 
-                    logger.error(str(send_otp))
-                    return Response({"detail":send_otp["message"],"message":send_otp["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
-                else:
-                    return Response({"detail":otp_sent_success,"message":otp_sent_success, "status":True}, status.HTTP_200_OK)
+            random_numbers=generate_four_random_digits()
+            built_data = {
+                        "to": get_international_number(phone),
+                        "message": f"Hello your OTP to create an account with us is {random_numbers}",
+                        # "sender_name": openconfig()['sendchamp']['sender_id'],
+                        "sender_name": SENDCHAMP_SENDER_ID,
+                        "route": "non_dnd"
+                        }
+            if phone:
+                check_number = OtpPhone.objects.filter(phone=phone).last()
+                if check_number:
+                    from datetime import datetime, timedelta
+                    time_difference = datetime.now() - check_number.updated_at.replace(tzinfo=None)
+                    if time_difference  < timedelta(seconds=120):
+                        return Response({"detail":wait_two_minutes,"message":wait_two_minutes, "status":False}, status.HTTP_400_BAD_REQUEST)
+                    if time_difference < timedelta(seconds=240) and check_number.count > 3:
+                        return Response({"detail":wait_4_minutes,"message":wait_4_minutes, "status":False}, status.HTTP_400_BAD_REQUEST)
 
-            else:
-                try:
-                    logger.debug('send champ OTP')
-                    OtpPhone.objects.create(phone=phone, count=1, code = random_numbers)
                     send_otp = self.send_sms_logic(built_data)
-                    if send_otp["status"] != 200: 
-                        logger.error(str(send_otp))  
-                        if self.mock == True:
-                            return Response({"detail":otp_sent_success,"message":otp_sent_success, "status":True}, status.HTTP_200_OK)
+                    check_number.code = random_numbers
+                    check_number.is_deleted = False
+                    check_number.count = check_number.count + 1
+                    check_number.save()
+                    if send_otp["code"] != 200: 
+                        logger.error(str(send_otp))
                         return Response({"detail":send_otp["message"],"message":send_otp["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
                     else:
-                        
                         return Response({"detail":otp_sent_success,"message":otp_sent_success, "status":True}, status.HTTP_200_OK)
-                except Exception as e:
-                    logger.error(str(e))
-                    return Response({"detail":str(e), "message":str(e), "status":False}, status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({"detail":"phone number field can not be empty","message":"phone number field can not be empty", "status":False}, status.HTTP_400_BAD_REQUEST)
+
+                else:
+                    try:
+                        logger.debug('send champ OTP')
+                        OtpPhone.objects.create(phone=phone, count=1, code = random_numbers)
+                        send_otp = self.send_sms_logic(built_data)
+                        if send_otp["status"] != 200: 
+                            logger.error(str(send_otp))  
+                            if self.mock == True:
+                                return Response({"detail":otp_sent_success,"message":otp_sent_success, "status":True}, status.HTTP_200_OK)
+                            return Response({"detail":send_otp["message"],"message":send_otp["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
+                        else:
+                            
+                            return Response({"detail":otp_sent_success,"message":otp_sent_success, "status":True}, status.HTTP_200_OK)
+                    except Exception as e:
+                        logger.error(str(e))
+                        return Response({"detail":str(e), "message":str(e), "status":False}, status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"detail":"phone number field can not be empty","message":"phone number field can not be empty", "status":False}, status.HTTP_400_BAD_REQUEST)
             
 
 
@@ -403,7 +360,6 @@ class GenerateOtpView(APIView):
             if not user.groups.filter(name="admin"):
                 raise exceptions.AuthenticationFailed('Auauthorized to view this')
             otp_gen = generate_token(phone_number)
-            print(otp_gen, 12345)
             results = {
                 'otp': otp_gen
             }
@@ -443,17 +399,18 @@ class UserBankAccountCreateView(APIView):
             res = {"detail": us.data, "status":  True}
             return Response(res, status=status.HTTP_200_OK)
         else:
-            string = (str(us.errors))
-            respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1] 
-            res = {"detail": respo, "status": False}
+            res = {"detail": custom_serializer_error(us.errors), "status": False}
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
 
 
-# get the bvn from front
-# do the bvn pull
-# populate bvn model
-# populate user field
+logger = logging.getLogger('send_otp_logger')
+logger.setLevel(logging.DEBUG)
+fh = logging.FileHandler('registaration.log')
+fh.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
 
 class UserRegistration(APIView):
     permission_classes = (AllowAny,)
@@ -467,6 +424,7 @@ class UserRegistration(APIView):
             try:
                 bvn_data = request.data["bvn_data"]
             except Exception as e:
+                logger.error(str(e))
                 res = {"detail": str(e), "status":False}
                 return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
@@ -497,17 +455,19 @@ class UserRegistration(APIView):
                     title = bvn_data.get("title", ""),
                     watch_listed = bvn_data.get("watch_listed", ""),
                 )
-                res = {"detail": us.data, "status":  True}
-                return Response(res, status=status.HTTP_200_OK)
+                login_data = self.login_user(us.data)
+                if login_data["status"]:
+                    return Response(login_data, status=status.HTTP_200_OK)
+                logger.error(str(login_data))
+                return Response(login_data, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
+                logger.error(str(e))
                 user.delete()
                 res = {"detail": str(e), "status": False}
                 return Response(res, status=status.HTTP_400_BAD_REQUEST)
         else:
-            errors = us.errors
-            string = (str(errors))
-            respo = string.split(":")[1].split("=")[1].split(",")[0].split("'")[1] 
-            res = {"detail": respo, "status": False}
+            logger.error(str(us.errors))
+            res = {"detail": custom_serializer_error(us.errors), "status": False}
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
     def bvn_pull(data):
@@ -527,6 +487,18 @@ class UserRegistration(APIView):
         else:
             #logic for live data
             pass
+    def login_user(self, data) -> dict:
+        phone_number = data["phone_number"]
+        user_profile = CustomUser.objects.filter(phone_number=phone_number).first()
+        access_token = AccessToken.for_user(user_profile)
+        refresh_token = RefreshToken.for_user(user_profile)
+        return {'access_token': str(access_token),
+                'refresh_token': str(refresh_token),
+                "phone_number":user_profile.phone_number,
+                "status": True
+                }
+        
+        
 
 
 
@@ -730,3 +702,13 @@ class UserLoanProfileAPIView(APIView):
             }
             return Response(response, status=status.HTTP_200_OK)
 
+
+
+
+
+
+
+
+
+
+# ================================================
