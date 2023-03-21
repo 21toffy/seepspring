@@ -23,10 +23,24 @@ from django.db.models import Sum
 from django.db.models import Q
 from rest_framework import pagination
 from django.db import transaction
-
+from .models import Department, Role
 from common.email_utils import send_email, SendChampEmailSender
+from django.http import JsonResponse
+from django.views import View
 
- 
+class DepartmentListAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        departments = Department.objects.all()
+        serializer = serializers.DepartmentSerializer(departments, many=True)
+        return Response({"status":True, "detail":serializer.data}, status.HTTP_200_OK)
+
+class RoleListAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        roles = Role.objects.all()
+        serializer = serializers.RoleSerializer(roles, many=True)
+        return Response({"status":True, "detail":serializer.data}, status.HTTP_200_OK)
+
+
 class EmployeeCreation(APIView):
     permission_classes = (AllowAny,)
     email = "sendchamp"

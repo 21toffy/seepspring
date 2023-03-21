@@ -10,6 +10,21 @@ from loan.serializers import InterestSerializer
 # serializers.py
 from .models import Employee
 
+
+from .models import Department, Role
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ("id", "department_name")
+
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ("id", "role_name")
+
+
+
 class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
