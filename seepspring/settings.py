@@ -276,6 +276,27 @@ SENDCHAMP_SENDER_ID = os.getenv("SENDCHAMP_SENDER_ID", "")
 
 
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
+
+
 
 # CELERY CONFIGURATIONS
 CELERY_BROKER_URL=os.getenv("CELERY_BROKER")
