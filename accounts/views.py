@@ -165,7 +165,7 @@ class UserBankAccountListView(APIView):
 class VerifyPhone(APIView):
     permission_classes = (AllowAny,)
 
-    mock = True
+    mock = False
 
     def validate_otp(self, otp):
         if len(otp)!= 4:
@@ -230,7 +230,7 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 class SendOTPToPhone(APIView):
-    mock =True
+    mock =False
     permission_classes = (AllowAny,)
     def send_sms_logic(self, data):
         
@@ -292,7 +292,7 @@ class SendOTPToPhone(APIView):
                         send_otp = self.send_sms_logic(built_data)
                         if send_otp["status"] != 200: 
                             logger.error(str(send_otp))  
-                            if self.mock == True:
+                            if self.mock:
                                 return Response({"detail":otp_sent_success,"message":otp_sent_success, "status":True}, status.HTTP_200_OK)
                             return Response({"detail":send_otp["message"],"message":send_otp["message"], "status":False}, status.HTTP_400_BAD_REQUEST)
                         else:
