@@ -77,7 +77,7 @@ class CustomToken(jwt_views.TokenObtainPairView):
 
 
 from rest_framework import exceptions
-from common.utils import (generate_token, generate_four_random_digits, get_international_number, custom_serializer_error)
+from common.utils import (generate_token, generate_four_random_digits, get_international_number, custom_serializer_error, custom_user_serializer_error)
 from django.contrib import auth
 import requests
 
@@ -163,6 +163,8 @@ class UserBankAccountListView(APIView):
 
 
 class VerifyPhone(APIView):
+    permission_classes = (AllowAny,)
+
     mock = True
 
     def validate_otp(self, otp):
@@ -416,7 +418,7 @@ class UserRegistration(APIView):
     permission_classes = (AllowAny,)
     # serializer_class = GlobalAccountListSerializer
  
-    # @transaction.atomic
+    @transaction.atomic
     def post(self,request,*args,**kwargs):
         us=UserRegistrationSerializer(data=request.data,many=False)
         if us.is_valid():
@@ -424,8 +426,8 @@ class UserRegistration(APIView):
             try:
                 bvn_data = request.data["bvn_data"]
             except Exception as e:
-                logger.error(str(e))
-                res = {"detail": str(e), "status":False}
+                logger.error(f"{str(e)}, BVN data was not passed")
+                res = {"detail": "Bvn data was not passed", "status":False}
                 return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
             try:
@@ -467,7 +469,7 @@ class UserRegistration(APIView):
                 return Response(res, status=status.HTTP_400_BAD_REQUEST)
         else:
             logger.error(str(us.errors))
-            res = {"detail": custom_serializer_error(us.errors), "status": False}
+            res = {"detail": custom_user_serializer_error(us.errors), "status": False}
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
     def bvn_pull(data):

@@ -105,50 +105,54 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
         fields = [
-            "email",
-            "password",
-            "phone_number",        
             "first_name",
-            "last_name",
             "middle_name",
-            "gender",
+            "last_name",
             "dob",
-            "lga_of_origin",
-            "lga_of_residence",
-            "marital_status",
+            "gender",
             "nationality",
             "bvn",
-            "bvn_phone_number",
-            "bvn_address",
+            "education",
+            "marital_status",
+            "number_of_children",
+            "current_address",
+            "email",
+            "phone_number",
+            "lga_of_origin",
             "state_of_origin",
+            "city",
             "state_of_residence",
+            "password",
+
+
         ]
     def create(self, validated_data):
         # create user 
         user = CustomUser.objects.create(
-            email = validated_data['email'],
-            phone_number = validated_data['phone_number'],
             first_name = validated_data.get("first_name", "First name"),
-            last_name = validated_data.get("last_name", "Last name"),
             middle_name = validated_data.get("middle_name", "middle name"),
-            gender = validated_data.get("gender", "Male"),
+            last_name = validated_data.get("last_name", "Last name"),
             dob = validated_data.get("dob", None),
-            lga_of_origin = validated_data.get("lga_of_origin", "Lagos Island"),
-            lga_of_residence = validated_data.get("lga_of_residence", "Lagos Island"),
-            marital_status = validated_data['marital_status']or "",
+            gender = validated_data.get("gender", "Male"),
             nationality = validated_data.get("nationality", "Nigerian"),
             bvn = validated_data['bvn'],
-            
-            bvn_phone_number = validated_data.get("bvn_phone_number", "09099999999"),
-            bvn_address = validated_data.get("bvn_address", "7a ayanleye street egan"),
+            education = validated_data['education']or "",
+            marital_status = validated_data['marital_status']or "",
+            number_of_children = validated_data.get("number_of_children", "0"),
+            current_address = validated_data['current_address']or "",
+            email = validated_data['email'],
+            phone_number = validated_data['phone_number'],
+            lga_of_origin = validated_data.get("lga_of_origin", "Lagos Island"),
             state_of_origin = validated_data.get("state_of_origin", "Lagos"),
+            city = validated_data['city'],
             state_of_residence = validated_data.get("state_of_residence", "Lagos"),            
 
 
-            # city = validated_data['city'],
-            # education = validated_data['education']or "",
-            # current_address = validated_data['current_address']or "",
-            # number_of_children = validated_data.get("number_of_children", "0"),
+            # lga_of_residence = validated_data.get("lga_of_residence", ""),
+            # bvn_phone_number = validated_data.get("bvn_phone_number", ""),
+            # bvn_address = validated_data.get("bvn_address", ""),
+
+
             # image = validated_data['image']or "",
             # address_image_url = validated_data["address_image_url"] or "",
         
@@ -160,57 +164,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         
         return user
         
-    def __init__(self, *args, **kwargs):
-            super(UserRegistrationSerializer, self).__init__(*args, **kwargs)
-
-            self.fields['email'].error_messages['blank'] = 'Please enter your email.'
-            self.fields['email'].error_messages['invalid'] = 'Please enter a valid email.'
-
-            self.fields['phone_number'].error_messages['blank'] = 'Please enter your phone number.'
-            self.fields['phone_number'].error_messages['invalid'] = 'Please enter a valid phone number.'
-
-            self.fields['first_name'].error_messages['blank'] = 'Please enter your first name.'
-            self.fields['first_name'].error_messages['invalid'] = 'Please enter a valid first name.'
-
-            self.fields['last_name'].error_messages['blank'] = 'Please enter your last name.'
-            self.fields['last_name'].error_messages['invalid'] = 'Please enter a valid last name.'
-
-            self.fields['middle_name'].error_messages['blank'] = 'Please enter your middle name.'
-            self.fields['middle_name'].error_messages['invalid'] = 'Please enter a valid middle name.'
-            
-            self.fields['gender'].error_messages['blank'] = 'Please enter your gender.'
-            self.fields['gender'].error_messages['invalid'] = 'Please enter a valid gender.'
-
-            self.fields['dob'].error_messages['blank'] = 'Please enter your date of birth.'
-            self.fields['dob'].error_messages['invalid'] = 'Please enter a valid date of birth.'
-
-            self.fields['lga_of_origin'].error_messages['blank'] = 'Please enter your LGA.'
-            self.fields['lga_of_origin'].error_messages['invalid'] = 'Please enter a valid LGA.'
-
-            self.fields['lga_of_residence'].error_messages['blank'] = 'Please enter your LGA of residence.'
-            self.fields['lga_of_residence'].error_messages['invalid'] = 'Please enter a valid LGA of residence.'
-
-            self.fields['marital_status'].error_messages['blank'] = 'Please enter your marital status.'
-            self.fields['marital_status'].error_messages['invalid'] = 'Please enter a valid marital status.'
-
-            self.fields['nationality'].error_messages['blank'] = 'Please enter your Nationality.'
-            self.fields['nationality'].error_messages['invalid'] = 'Please enter a valid Nationality.'
-            
-            self.fields['bvn'].error_messages['blank'] = 'Please enter your BVN.'
-            self.fields['bvn'].error_messages['invalid'] = 'Please enter a valid BVN.'          
-            
-            self.fields['bvn_phone_number'].error_messages['blank'] = 'Please enter your phone number linked with your bvn.'
-            self.fields['bvn_phone_number'].error_messages['invalid'] = 'Please enter a valid phone number linked with your bvn.'
-
-            self.fields['bvn_address'].error_messages['blank'] = 'Please enter your BVN address.'
-            self.fields['bvn_address'].error_messages['invalid'] = 'Please enter a valid BVN address.'
-
-            self.fields['state_of_origin'].error_messages['blank'] = 'Please enter your State of origin.'
-            self.fields['state_of_origin'].error_messages['invalid'] = 'Please enter a valid State of origin.'
-
-            self.fields['state_of_residence'].error_messages['blank'] = 'Please enter your state of residence.'
-            self.fields['state_of_residence'].error_messages['invalid'] = 'Please enter a valid state of residence.'
-
 
 
 
