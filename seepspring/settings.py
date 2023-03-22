@@ -266,9 +266,17 @@ CORS_ORIGIN_WHITELIST = (
 
 
 
-SENDCHAMP_AUTHORIZATION = os.getenv("SENDCHAMP_AUTHORIZATION", "")
+# SENDCHAMP_AUTHORIZATION = os.getenv("SENDCHAMP_AUTHORIZATION", "")
 SENDCHAMP_URL = os.getenv("SENDCHAMP_URL", "")
 SENDCHAMP_SENDER_ID = os.getenv("SENDCHAMP_SENDER_ID", "")
+
+import json
+
+with open('config.json') as config_file:
+    config = json.load(config_file)
+
+SENDCHAMP_AUTHORIZATION = config.get('SENDCHAMP_AUTHORIZATION')
+
 
 
 

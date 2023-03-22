@@ -13,3 +13,7 @@ debug.log
 .idea/
 staticfiles/
 config.json
+otp_logs.log
+sendchamp_logs.log
+registaration.log
+config.json

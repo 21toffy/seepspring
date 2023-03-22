@@ -22,6 +22,8 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --upgrade pip
 COPY ./requirements.txt ./
 COPY ./.env ./
+COPY ./config.json ./
+
 RUN pip install -r requirements.txt
 
 COPY ./entrypoint /.

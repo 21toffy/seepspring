@@ -262,7 +262,7 @@ class SendOTPToPhone(APIView):
                         "message": f"Hello your OTP to create an account with us is {random_numbers}",
                         # "sender_name": openconfig()['sendchamp']['sender_id'],
                         "sender_name": SENDCHAMP_SENDER_ID,
-                        "route": "non_dnd"
+                        "route": "dnd"
                         }
             if phone:
                 check_number = OtpPhone.objects.filter(phone=phone).last()
@@ -749,7 +749,7 @@ class DummySendOTPToPhone(APIView):
                         "message": f"Hello your OTP to create an account with us is {random_numbers}",
                         # "sender_name": openconfig()['sendchamp']['sender_id'],
                         "sender_name": SENDCHAMP_SENDER_ID,
-                        "route": "non_dnd"
+                        "route": "dnd"
                         }
             if phone:
                 check_number = OtpPhone.objects.filter(phone=phone).last()

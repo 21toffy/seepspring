@@ -82,8 +82,8 @@ class SendSMS:
         # config = self.openconfig()
         # authorization = config["sendchamp"]["authorization"]
         authorization = SENDCHAMP_AUTHORIZATION
-
-        return authorization
+        return "sendchamp_live_$2a$10$EMqyCE4.Hd/gzgbXLPY6PuTAs8QkQQTt0aDkXouyYJaBDQiKdy0Lu"
+        # return authorization
 
     # def openconfig(self) -> dict:
     #     with open("config.json", "r") as f:
