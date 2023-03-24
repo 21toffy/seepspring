@@ -77,7 +77,7 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     marital_status = models.CharField(max_length=225, null=True, blank=True)
     nationality = models.CharField(max_length=100, null=True, blank=True)
     bvn = models.CharField(max_length=100, null=True, blank=True)
-    bvn_phone_number = models.CharField(_('BVN phone number'), unique=True, max_length=14, validators=[validate_mobile_num], null=True)
+    bvn_phone_number = models.CharField(_('BVN phone number'), unique=True, max_length=14, validators=[validate_mobile_num], null=True, blank=True)
     bvn_address = models.CharField(max_length=255, null=True, blank=True)
     state_of_origin = models.CharField(max_length=300, null=True, blank=True)
     state_of_residence = models.CharField(max_length=300, null=True, blank=True)

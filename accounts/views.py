@@ -673,7 +673,7 @@ class UserProfileAPIView(APIView):
             loan_interest = Interest.objects.filter(id = available_loan.interest.id).first()
             user_loan_dictionary = {
                 "eligible_to_collect_loan": False,
-                 "loan_details":{
+                 "loan_detail":{
                     "id":available_loan.id,
                     "loan_request_status":available_loan.loan_request_status,
                     "amount_requested":available_loan.amount_requested,
@@ -691,7 +691,7 @@ class UserProfileAPIView(APIView):
         else:
             user_loan_dictionary = {
                 "eligible_to_collect_loan": True,
-                "loan_details":{}
+                "loan_detail":{}
             }
 
         z = {"user_details":user_serializer.data,
