@@ -208,6 +208,8 @@ REST_FRAMEWORK = {
     #     'rest_framework.permissions.IsAuthenticated',
         
     # ],
+    'EXCEPTION_HANDLER': 'seepspring.exceptions.custom_exception_handler',
+
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
@@ -284,24 +286,24 @@ SENDCHAMP_AUTHORIZATION = config.get('SENDCHAMP_AUTHORIZATION')
 
 
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'debug.log',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': 'debug.log',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['file'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#     },
+# }
 
 
 
@@ -324,3 +326,7 @@ EMAIL_USE_SSL = False
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
 
 SENDCHAMP_EMAIL_URL=os.getenv('SENDCHAMP_EMAIL_URL', "https://api.sendchamp.com/api/v1/email/send") 
+
+from datetime import datetime, timedelta
+
+TOKEN_EXPIRY = 24

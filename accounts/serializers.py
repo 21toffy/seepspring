@@ -9,6 +9,7 @@ ColleagueContact,
 BankAccountDetails,
 UserEmploymentDuration,
 UserSalaryRange,
+CardDetails
 )
 from rest_framework import serializers
 from rest_framework import exceptions
@@ -19,82 +20,36 @@ from django.contrib.auth.hashers import check_password
 
 
 
+class CardNumberField(serializers.CharField):
+    def to_representation(self, value):
+        # Check if the card number is at least 16 digits long
+        if len(value) >= 16:
+            # Replace the middle 8 digits with asterisks
+            return value[:4] + '*' * 8 + value[-4:]
+        else:
+            return value
+class CardDetailsGetSerializer(serializers.ModelSerializer):
+    card_no = CardNumberField()
+
+    class Meta:
+        model = CardDetails
+        fields = [
+            "id",
+            "card_no",
+            "cart_token",
+            "card_name",
+        ]
+
+
+
 class GetuserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
 
 
-
 class LoginUserSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     password = serializers.CharField(style={'input_type': 'password'})
-
-
-
-
-# class UserRegistrationSerializer(serializers.ModelSerializer):
-
-#     class Meta:
-#         model = CustomUser
-
-#         extra_kwargs = {'password': {'write_only': True}}
-
-#         fields = [
-#             "email",
-#             "password",
-#             "phone_number",
-#             "first_name",
-#             "last_name",
-#             "middle_name",
-#             "dob",
-#             "gender",
-#             "nationality",
-#             "current_address",
-#             "bvn",
-#             "education",
-#             "marital_status",
-#             "number_of_children",
-#             "image",
-#             "address_image_url",
-#             "lga_of_origin",
-#             "state_of_origin",
-#             "bvn_phone_number",
-#             "bvn_address",
-#             # "city"
-#         ]
-#     def create(self, validated_data):
-#         # create user 
-#         user = CustomUser.objects.create(
-#             email = validated_data['email'],
-#             phone_number = validated_data['phone_number'],
-#             first_name = validated_data['first_name']or "",
-#             last_name = validated_data['last_name']or "",
-#             middle_name = validated_data['middle_name'],
-#             dob = validated_data['dob'],
-#             gender = validated_data['gender']or "",
-#             nationality = validated_data['nationality']or "",
-#             # city = validated_data['city'],
-#             bvn = validated_data['bvn'],
-#             education = validated_data['education']or "",
-#             marital_status = validated_data['marital_status']or "",
-#             current_address = validated_data['current_address']or "",
-#             number_of_children = validated_data['number_of_children']or "0",
-#             image = validated_data['image']or "",
-#             address_image_url = validated_data["address_image_url"] or "",
-#             lga_of_origin = validated_data["lga_of_origin"] or "",
-#             state_of_origin = validated_data["state_of_origin"] or "",
-#             bvn_phone_number = validated_data["bvn_phone_number"] or "",
-#             bvn_address = validated_data["bvn_address"] or "",
-        
-#         )
-
-#         if user.password is not None:
-#             user.set_password(validated_data['password'])
-#             user.save()
-        
-#         return user
-
-
 
 
 
@@ -145,17 +100,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             lga_of_origin = validated_data.get("lga_of_origin", "Lagos Island"),
             state_of_origin = validated_data.get("state_of_origin", "Lagos"),
             city = validated_data['city'],
-            state_of_residence = validated_data.get("state_of_residence", "Lagos"),            
-
-
-            # lga_of_residence = validated_data.get("lga_of_residence", ""),
-            # bvn_phone_number = validated_data.get("bvn_phone_number", ""),
-            # bvn_address = validated_data.get("bvn_address", ""),
-
-
-            # image = validated_data['image']or "",
-            # address_image_url = validated_data["address_image_url"] or "",
-        
+            state_of_residence = validated_data.get("state_of_residence", "Lagos"),                    
         )
 
         if user.password is not None:

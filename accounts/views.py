@@ -6,6 +6,8 @@ from rest_framework import generics
 from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.db import transaction
+from datetime import timedelta
+from django.conf import settings
 import json
 from seepspring.settings import(
     SENDCHAMP_SENDER_ID
@@ -15,6 +17,9 @@ from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from loan.models import Interest, UserLoan
 import logging
+
+from loan.models import LoanLevel
+from adminapp.serializers import LoanLevelSerializer
 
 logger = logging.getLogger(__name__)
 from .serializers import (
@@ -51,6 +56,7 @@ EmploymentinformationGetSerializer,
 EmergencyContactGetSerializer,
 ColleagueContactGetSerializer,
 BankAccountDetailsGetSerializer,
+CardDetailsGetSerializer,
 )
 
 from rest_framework.permissions import (IsAuthenticated,AllowAny)
@@ -65,7 +71,8 @@ ColleagueContact,
 BankAccountDetails,
 UserEmploymentDuration,
 UserSalaryRange,
-OtpPhone, validate_mobile_num, BvnData
+OtpPhone, validate_mobile_num, BvnData,
+CardDetails
 
 )
 from rest_framework_simplejwt import views as jwt_views
@@ -493,6 +500,7 @@ class UserRegistration(APIView):
         phone_number = data["phone_number"]
         user_profile = CustomUser.objects.filter(phone_number=phone_number).first()
         access_token = AccessToken.for_user(user_profile)
+        access_token.set_exp(lifetime=timedelta(hours=settings.TOKEN_EXPIRY))
         refresh_token = RefreshToken.for_user(user_profile)
         return {'access_token': str(access_token),
                 'refresh_token': str(refresh_token),
@@ -547,6 +555,8 @@ class ChangePasswordView(generics.UpdateAPIView):
 
 
 class LoginUserView(APIView):
+    permission_classes = (AllowAny,)
+
     def post(self, request, *args, **kwargs):
         
         serializer = LoginUserSerializer(data =request.data)
@@ -554,11 +564,15 @@ class LoginUserView(APIView):
             phone_number = request.data["phone_number"]
             password = request.data["password"]
             user_profile = CustomUser.objects.filter(phone_number=phone_number).first()
+            if not user_profile.is_active:
+                return Response({"message":"Your account is inactive please contact Admin", "detail":"Your account is inactive please contact Admin", "status":False,}, status=status.HTTP_401_UNAUTHORIZED )
             correct_password = user_profile.check_password(password)            
             if correct_password:
                 if user_profile is None:
                     return Response({"message":"You do not have an account", "detail":"You do not have an account", "status":False,}, status=status.HTTP_401_UNAUTHORIZED )
                 access_token = AccessToken.for_user(user_profile)
+                access_token.set_exp(lifetime=timedelta(hours=settings.TOKEN_EXPIRY))
+
                 refresh_token = RefreshToken.for_user(user_profile)
                 return Response(
                     {'access_token': str(access_token),
@@ -634,17 +648,64 @@ class UserProfileAPIView(APIView):
         _Employmentinformation = Employmentinformation.objects.filter(user = request.user).first()
         _EmergencyContact = EmergencyContact.objects.filter(user = request.user).first()
         _ColleagueContact = ColleagueContact.objects.filter(user = request.user).first()
-        _BankAccountDetails = BankAccountDetails.objects.filter(user = request.user).first()
+        _BankAccountDetails = BankAccountDetails.objects.filter(user = request.user)
+        _CardDetails = CardDetails.objects.filter(user=request.user)
+        _Loan_level = LoanLevel.objects.filter(level=user.user_level, active=True).first()
+        print(_Loan_level, 123)
         
         user_serializer = UserRegistrationGetSerializer(user)
 
+
+
+        loan_level_serializer = LoanLevelSerializer(_Loan_level)
         _UserEmploymentDurationCreationSerializer = UserEmploymentDurationGetSerializer(_UserEmploymentDuration)
         _UserSalaryRangeCreationSerializer = UserSalaryRangeGetSerializer(_UserSalaryRange)
         _EmploymentinformationCreationSerializer = EmploymentinformationGetSerializer(_Employmentinformation)
         _EmergencyContactCreationSerializer = EmergencyContactGetSerializer(_EmergencyContact)
         _ColleagueContactCreationSerializer = ColleagueContactGetSerializer(_ColleagueContact)
-        _BankAccountDetailsCreationSerializer = BankAccountDetailsGetSerializer(_BankAccountDetails)
-        z = {"user_details":user_serializer.data, "eployment_duration":_UserEmploymentDurationCreationSerializer.data, "ralary_range":_UserSalaryRangeCreationSerializer.data, "employment_information":_EmploymentinformationCreationSerializer.data,"emergency_contact":_EmergencyContactCreationSerializer.data, "colleague_contact":_ColleagueContactCreationSerializer.data, "bank_details":_BankAccountDetailsCreationSerializer.data}
+        _BankAccountDetailsCreationSerializer = BankAccountDetailsGetSerializer(_BankAccountDetails, many=True)
+        _CardDetailsGetSerializer = CardDetailsGetSerializer(_CardDetails, many=True)
+        available_loan = UserLoan.objects.filter(
+                Q(paid=False) |
+                Q(active=False) |
+                Q(user=request.user)).first()
+        if available_loan:
+            loan_interest = Interest.objects.filter(id = available_loan.interest.id).first()
+            user_loan_dictionary = {
+                "eligible_to_collect_loan": False,
+                 "loan_details":{
+                    "id":available_loan.id,
+                    "loan_request_status":available_loan.loan_request_status,
+                    "amount_requested":available_loan.amount_requested,
+                    "amount_disbursed":available_loan.amount_disbursed,
+                    "amount_owed":available_loan.amount_left,
+                    "loan_date":available_loan.loan_date,
+                    "loan_due_date":available_loan.loan_due_date,
+                    "interest":{
+                                "id":loan_interest.id,
+                                "vat":loan_interest.vat,
+                                "service_charge":loan_interest.service_charge,
+                                "interest":loan_interest.interest,}
+                 }
+            }
+        else:
+            user_loan_dictionary = {
+                "eligible_to_collect_loan": True,
+                "loan_details":{}
+            }
+
+        z = {"user_details":user_serializer.data,
+             "eployment_duration":_UserEmploymentDurationCreationSerializer.data, 
+             "ralary_range":_UserSalaryRangeCreationSerializer.data,
+             "employment_information":_EmploymentinformationCreationSerializer.data,
+             "emergency_contact":_EmergencyContactCreationSerializer.data,
+             "colleague_contact":_ColleagueContactCreationSerializer.data,
+             "bank_details":_BankAccountDetailsCreationSerializer.data,
+             "card_details":_CardDetailsGetSerializer.data,
+             "loan_details":user_loan_dictionary,
+            "eligible_loan_level":loan_level_serializer.data,
+
+             }
         return Response({"detail":z, "status":True}, status=status.HTTP_200_OK)
 
 
@@ -705,12 +766,21 @@ class UserLoanProfileAPIView(APIView):
             return Response(response, status=status.HTTP_200_OK)
 
 
+class CardDetailsAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
 
-
-
-
-
-
+    def post(self, request, format=None):
+        serializer = CardDetailsGetSerializer(data=request.data, context={'request': request, 'user': request.user})
+        if serializer.is_valid():
+            serializer.save()
+            response = {
+                'status': True,
+                'message': 'Card Created Successfully',
+                'detail': serializer.data,
+                }
+            return Response(response, status=status.HTTP_201_CREATED)
+        else:
+            return Response(custom_serializer_error(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
 
 
 # ================================================

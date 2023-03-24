@@ -6,6 +6,7 @@ Employmentinformation,
 EmergencyContact,
 ColleagueContact,
 BankAccountDetails,
+CardDetails,
 
 UserEmploymentDuration,
 UserSalaryRange,
@@ -33,7 +34,7 @@ class UserRegistrationGetSerializer(serializers.ModelSerializer):
             "dob",
             "gender",
             "nationality",
-            # "city",
+            "user_level",
             "bvn",
             "education",
             "marital_status",
@@ -132,6 +133,25 @@ class ColleagueContactGetSerializer(serializers.ModelSerializer):
             "phone_number",
 
         ]
+
+
+
+
+class CardDetailsGetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CardDetails
+        fields = [
+            "id",
+            "email",
+            "card_no",
+            "cart_token",
+            "card_name",
+        ]
+    def create(self, validated_data):
+        validated_data['user'] = self.context['user']
+        card_details = CardDetails.objects.create(**validated_data)
+        return card_details
+
 
 
 class BankAccountDetailsGetSerializer(serializers.ModelSerializer):

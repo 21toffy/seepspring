@@ -12,7 +12,8 @@ BankAccountDetails,
 UserEmploymentDuration,
 UserSalaryRange,
 OtpPhone,
-BvnData
+BvnData,
+CardDetails
 
 )
 
@@ -25,6 +26,10 @@ admin.site.register(Employmentinformation)
 admin.site.register(EmergencyContact)
 admin.site.register(ColleagueContact)
 admin.site.register(BankAccountDetails)
+admin.site.register(CardDetails)
+
+
+
 
 admin.site.register(UserEmploymentDuration)
 admin.site.register(OtpPhone)

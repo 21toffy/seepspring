@@ -85,7 +85,7 @@ class CustomUser(BaseModel, AbstractBaseUser, PermissionsMixin):
     education = models.CharField(max_length=225, null=True, blank=True)
     current_address = models.CharField(max_length=225, null=True, blank=True)
     number_of_children = models.CharField(max_length=225, null=True, blank=True)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
     address_image_url = models.URLField(max_length=255, null=True, blank=True)
     user_level = models.IntegerField(
@@ -225,4 +225,12 @@ class BankAccountDetails(BaseModel):
     bank_name = models.CharField(max_length=225, null=True, blank=True)
     account_number = models.CharField(max_length=225, null=True, blank=True)
     account_name = models.CharField(max_length=225, null=True, blank=True, default="colleague")
+
+
+class CardDetails(BaseModel):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    card_no = models.CharField(max_length=225, null=True, blank=True)
+    email = models.CharField(max_length=225, null=True, blank=True)
+    cart_token = models.CharField(max_length=225, null=True, blank=True)
+    card_name = models.CharField(max_length=225, null=True, blank=True)
 

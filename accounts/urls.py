@@ -21,7 +21,8 @@ from .views import (
     UserBankAccountCreateView,
     UserBankAccountListView,
     LoginUserView,
-    DummySendOTPToPhone
+    DummySendOTPToPhone,
+    CardDetailsAPIView
 )
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -70,6 +71,6 @@ urlpatterns = [
     path("create-bank-account", UserBankAccountCreateView.as_view(), name="create_bank_account"),
 
     path("list-bank-account", UserBankAccountListView.as_view(), name="list_bank_account"),
-
+    path("create-card", CardDetailsAPIView.as_view(), name="list_bank_account"),
 
 ]

@@ -16,9 +16,7 @@ services:
             python manage.py makemigrations &&
             python manage.py migrate &&
              python3 manage.py wait_for_db &&
-             python manage.py runserver 0.0.0.0:8001
-             /populate.sh
-             
+             python manage.py runserver 0.0.0.0:8001             
              "
     ports:
       - "8001:8001"
