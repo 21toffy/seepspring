@@ -564,12 +564,12 @@ class LoginUserView(APIView):
             phone_number = request.data["phone_number"]
             password = request.data["password"]
             user_profile = CustomUser.objects.filter(phone_number=phone_number).first()
+            if user_profile is None:
+                return Response({"message":"You do not have an account", "detail":"You do not have an account", "status":False,}, status=status.HTTP_401_UNAUTHORIZED )
             if not user_profile.is_active:
                 return Response({"message":"Your account is inactive please contact Admin", "detail":"Your account is inactive please contact Admin", "status":False,}, status=status.HTTP_401_UNAUTHORIZED )
             correct_password = user_profile.check_password(password)            
             if correct_password:
-                if user_profile is None:
-                    return Response({"message":"You do not have an account", "detail":"You do not have an account", "status":False,}, status=status.HTTP_401_UNAUTHORIZED )
                 access_token = AccessToken.for_user(user_profile)
                 access_token.set_exp(lifetime=timedelta(hours=settings.TOKEN_EXPIRY))
 
