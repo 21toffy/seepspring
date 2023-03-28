@@ -135,6 +135,11 @@ def get_loan_purpose():
             "id": "f3884557-83b5-45c1-93cb-cc0fcce33d5e",
             "purpose":"medical bills",
             "active":True
+        },
+            {
+            "id": "f3884557-83b5-45c1-93cb-cc0fcce33d6e",
+            "purpose":"School fees",
+            "active":True
         }
         
     ]
@@ -150,7 +155,7 @@ def get_loan_interest():
         },
                 {
             "id": "f3884557-83b5-45c1-93cb-cc0fcce33d5e",
-            "interest_name":"medical bills",
+            "interest_name":"Christmas Interest",
             "active":False
         }
         

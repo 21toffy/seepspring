@@ -18,11 +18,11 @@ from .models import (
 
 
 class NigerianBanksListView(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     serializer_class = NigerianBanksSerializer
 
     def get(self, request):
         nigerian_banks = NigerianBanks.objects.all()
         serializer = self.serializer_class(nigerian_banks, many=True)
-        return Response({"details":"success", "data":serializer.data, "status":status.HTTP_200_OK}, status.HTTP_200_OK)
+        return Response({"details":"success", "data":serializer.data, "status":True}, status.HTTP_200_OK)
    

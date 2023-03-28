@@ -278,8 +278,7 @@ with open('config.json') as config_file:
     config = json.load(config_file)
 
 SENDCHAMP_AUTHORIZATION = config.get('SENDCHAMP_AUTHORIZATION')
-
-
+PAYSTACK_API_KEY = config.get('PAYSTACK_API_KEY')
 
 
 # BROKER_URL = "amqp://guest:guest@localhost:5672//"
