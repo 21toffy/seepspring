@@ -18,7 +18,7 @@ from .models import (
 
 
 class NigerianBanksListView(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = NigerianBanksSerializer
 
     def get(self, request):
