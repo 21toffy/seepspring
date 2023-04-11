@@ -228,31 +228,55 @@ class ActiveLoanListView(APIView):
 
 from rest_framework.pagination import PageNumberPagination
 
+# class UserLoanRequestsListView(APIView):
+#     serializer_class = UserLoanserializer
+#     permission_classes = (IsAuthenticated,)
+#     def get(self, request, **kwargs):
+#         paginator = PageNumberPagination()
+#         total = request.GET.get('total',10)
+#         statuss = request.GET.get('status', '')
+#         available_status = ["PENDING", "DISBURSED", "LATE", "SETTLED", "DISAPPROVED", "APPROVED"]
+#         try:
+#             int(total)
+#         except Exception as e:
+#             return Response({"detail":"total must be an integer", "status":True}, status.HTTP_200_OK)
+#         paginator.page_size = total
+
+#         if statuss:
+#             if statuss.upper() in available_status:
+#                 active_user_loans = UserLoan.objects.filter(user= request.user, loan_request_status__exact = statuss.upper()).order_by("-created_at")
+#             else:
+#                 active_user_loans = UserLoan.objects.filter(user = request.user).order_by("-created_at")
+#         else:
+#             active_user_loans = UserLoan.objects.filter(user = request.user).order_by("-created_at")
+#         result_page = paginator.paginate_queryset(active_user_loans, request)
+#         serializer = UserLoanserializer(result_page, many=True)
+#         return paginator.get_paginated_response(serializer.data) 
+
+
 class UserLoanRequestsListView(APIView):
     serializer_class = UserLoanserializer
     permission_classes = (IsAuthenticated,)
+
     def get(self, request, **kwargs):
-        paginator = PageNumberPagination()
-        total = request.GET.get('total',10)
-        statuss = request.GET.get('status', '')
-        available_status = ["PENDING", "DISBURSED", "LATE", "SETTLED", "DISAPPROVED", "APPROVED"]
         try:
-            int(total)
+            available_status = ["PENDING", "DISBURSED", "LATE", "SETTLED", "DISAPPROVED", "APPROVED"]
+            active_user_loans = UserLoan.objects.filter(user=request.user).order_by("-created_at")
+            serializer = UserLoanserializer(active_user_loans, many=True)
+            response_data = {
+                "status": True,
+                "detail": serializer.data
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response({"detail":"total must be an integer", "status":True}, status.HTTP_200_OK)
-        paginator.page_size = total
+            response_data = {
+                "status": False,
+                "detail": str(e)
+            }
+            return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        if statuss:
-            if statuss.upper() in available_status:
-                active_user_loans = UserLoan.objects.filter(user= request.user, loan_request_status__exact = statuss.upper()).order_by("-created_at")
-            else:
-                active_user_loans = UserLoan.objects.filter(user = request.user).order_by("-created_at")
-        else:
-            active_user_loans = UserLoan.objects.filter(user = request.user).order_by("-created_at")
-        result_page = paginator.paginate_queryset(active_user_loans, request)
-        serializer = UserLoanserializer(result_page, many=True)
-        return paginator.get_paginated_response(serializer.data)
-
+            
             
         
 

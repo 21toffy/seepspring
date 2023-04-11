@@ -78,6 +78,7 @@ class GuarnteeSerializer(serializers.ModelSerializer):
 
 
 class UserLoanserializer(serializers.ModelSerializer):
+    loan_purpose = loanPurposeserializer()
     class Meta:
         model = UserLoan
         fields = (
@@ -87,7 +88,8 @@ class UserLoanserializer(serializers.ModelSerializer):
             "amount_disbursed",
             "loan_date",
             "loan_due_date",
-            "interest"
+            "interest",
+            "loan_purpose"
         )
 
 class UserBankAccountSerializer(serializers.ModelSerializer):

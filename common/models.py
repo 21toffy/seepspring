@@ -65,6 +65,29 @@ class OurTeam(BaseModel):
 
 
 
+class Testimonial(BaseModel):
+    image_url = models.CharField(null=True, blank=True, max_length=500)
+    person_name = models.CharField(null=True, blank=True, max_length=500)
+    testimony = models.CharField(null=True, blank=True, max_length=500)
+    active = models.BooleanField(default=False)
+    def __str__(self):
+        active_testimonial = "testimony of " + self.person_name + " is an ACTIVE testimonial "
+        inactive_testimonial = "testimony of " + self.person_name + " is an INACTIVE testimonial "
+        return inactive_testimonial if self.active == False else active_testimonial
+
+
+
+class Banner(models.Model):
+    title = models.CharField(max_length=255)
+    subtitle = models.CharField(max_length=255)
+    image_url = models.URLField()
+    active = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        # Deactivate other banners
+        Banner.objects.exclude(pk=self.pk).update(active=False)
+        super(Banner, self).save(*args, **kwargs)
+        
 
 
 

@@ -354,6 +354,22 @@ class SendOTPToPhone(APIView):
 
 class VerifyAccountNumber(APIView):
     permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        try:
+            account_number = request.data['account_number']
+            bank_code = request.data['bank_code']
+            url = f"https://api.paystack.co/bank/resolve?account_number={account_number}&bank_code={bank_code}"
+            paystack_api_key = settings.PAYSTACK_API_KEY
+            hed = {'Authorization': 'Bearer ' + paystack_api_key}
+            r = requests.get(url, headers=hed)
+            data = r.json()
+            if not data["status"]:
+                return Response({"data": {}, "detail": data["message"], "status": False}, status.HTTP_422_UNPROCESSABLE_ENTITY)
+            return Response({"data": data.get("data"), "detail": data["message"], "status": True}, status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"data": {}, "detail": str(e), "status": False}, status.HTTP_422_UNPROCESSABLE_ENTITY)
+
     def get(self, request):
         try:
             account_number = request.data['account_number']
