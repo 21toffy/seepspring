@@ -22,7 +22,11 @@ from .views import (
     UserBankAccountListView,
     LoginUserView,
     DummySendOTPToPhone,
-    CardDetailsAPIView
+    CardDetailsAPIView,
+    # InitTransaction
+    CardDetailsListAPIView,
+CardDetailsDetailAPIView,
+CardDetailsDeleteAPIView
 )
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -72,5 +76,11 @@ urlpatterns = [
 
     path("list-bank-account", UserBankAccountListView.as_view(), name="list_bank_account"),
     path("create-card", CardDetailsAPIView.as_view(), name="list_bank_account"),
+
+
+
+    path('card-details/', CardDetailsListAPIView.as_view(), name='card_details_list'),
+    path('card-details/<uuid:pk>/', CardDetailsDetailAPIView.as_view(), name='card_details_detail'),
+    path('card-details/<uuid:pk>/delete/', CardDetailsDeleteAPIView.as_view(), name='card_details_delete'),
 
 ]

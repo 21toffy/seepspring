@@ -233,4 +233,29 @@ class CardDetails(BaseModel):
     email = models.CharField(max_length=225, null=True, blank=True)
     cart_token = models.CharField(max_length=225, null=True, blank=True)
     card_name = models.CharField(max_length=225, null=True, blank=True)
+    card_bank = models.CharField(max_length=50, null=True, blank=True)
+    last4digits = models.CharField(max_length=50, null=True, blank=True)
+    authorization_email = models.CharField(max_length=50, null=True, blank=True)
+    expiry_month = models.CharField(max_length=50, null=True, blank=True)
+    expiry_year = models.CharField(max_length=50, null=True, blank=True)
+    card_type = models.CharField(max_length=233, null=True, blank=True)
+    brand = models.CharField(max_length=233, null=True, blank=True)
+    authorization_code = models.CharField(max_length=150, unique=True, null=True, blank=True)
+    added_on = models.DateField(auto_now_add=True, null=True, blank=True)
+    channel = models.CharField(max_length=233, null=True, blank=True)
+    reusable = models.CharField(max_length=233, null=True, blank=True)
+    country_code = models.CharField(max_length=233, null=True, blank=True)
+    signature = models.CharField(max_length=233, null=True, blank=True)
+    bin = models.CharField(max_length=233, null=True, blank=True)
+
+    
+    is_primary = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False)
+
+
+class CardCharge(BaseModel):
+    reference = models.CharField(max_length=225, null=True, blank=True)
+    card = models.ForeignKey(CardDetails, on_delete=models.CASCADE)
+
+
 

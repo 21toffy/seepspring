@@ -30,9 +30,10 @@ Jinja2==3.0.3
 kombu==5.2.4
 MarkupSafe==2.1.0
 packaging==21.3
+paystackapi==2.1.0
 pip-upgrader==1.4.15
 prompt-toolkit==3.0.31
-psycopg2-binary==2.9.3
+psycopg2==2.9.3
 PyJWT==2.4.0
 pyotp==2.7.0
 pyparsing==3.0.7

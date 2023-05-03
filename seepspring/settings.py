@@ -52,9 +52,10 @@ INSTALLED_APPS = [
 
     'rest_framework',
     "rest_framework_simplejwt",
-    "corsheaders",
     'celery',
+    "corsheaders",
     'django_celery_beat',
+    # "paystackapi",
     # 'drf_yasg'
 
 
@@ -328,4 +329,4 @@ SENDCHAMP_EMAIL_URL=os.getenv('SENDCHAMP_EMAIL_URL', "https://api.sendchamp.com/
 
 from datetime import datetime, timedelta
 
-TOKEN_EXPIRY = 24
+TOKEN_EXPIRY = 100

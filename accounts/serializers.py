@@ -19,6 +19,15 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth.hashers import check_password
 
 
+from .models import CardDetails
+
+
+class CardDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CardDetails
+        fields = '__all__'
+
+
 
 class CardNumberField(serializers.CharField):
     def to_representation(self, value):

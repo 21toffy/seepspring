@@ -97,8 +97,56 @@ import logging
 
 
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.http import HttpResponse
+import hashlib
+# from .models import PaymentStatus, User, Card
+# from .serializers import CardSerializer
+from rest_framework import status
 
-class ResolveBVN(APIView):   
+
+from .models import CardDetails
+from .serializers import CardDetailsSerializer
+
+
+class CardDetailsListAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, format=None):
+        queryset = CardDetails.objects.filter(user = request.user,is_active=True)
+        serializer = CardDetailsSerializer(queryset, many=True)
+        return Response({"detail": serializer.data, "status": True}, status.HTTP_200_OK)
+
+class CardDetailsDetailAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, pk, format=None):
+        try:
+            card_detail = CardDetails.objects.get(pk=pk, user = request.user, is_active = True)
+        except CardDetails.DoesNotExist:
+            return Response({"detail": "CardDetails not found.", "status": False}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CardDetailsSerializer(card_detail)
+        return Response({"detail": serializer.data, "status": True}, status.HTTP_200_OK)
+
+class CardDetailsDeleteAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def delete(self, request, pk, format=None):
+        try:
+            card_detail = CardDetails.objects.get(pk=pk, user = request.user)
+        except CardDetails.DoesNotExist:
+            return Response({"detail": "CardDetails not found.", "status": False}, status=status.HTTP_404_NOT_FOUND)
+
+        card_detail.is_active  =False
+        card_detail.save()
+        return Response({"detail": "CardDetails deleted successfully.", "status": True}, status=status.HTTP_204_NO_CONTENT)
+
+
+class ResolveBVN(APIView):  
+    permission_classes = (IsAuthenticated,)
+
     mock = True     
     def get(self, request, bvn=None):
         if self.mock == True:
