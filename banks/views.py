@@ -40,6 +40,8 @@ from django.conf import settings
 import requests
 
 class InitTransaction(APIView):
+    permission_classes = (IsAuthenticated,)
+    
     def post(self, request, format=None):
         try:
             email = request.data['email']
@@ -78,6 +80,8 @@ class InitTransaction(APIView):
             return Response({'error': str(e), 'message': 'Error initializing transaction.'}, status=403)
 
 class PayStackWebHook(APIView):
+    permission_classes = (AllowAny,)
+
     def post(self, request):
         # validate event
         # hashed_payload = hashlib.sha512(settings.PAYSTACK_API_KEY.encode('utf-8') + request.body.encode('utf-8')).hexdigest()

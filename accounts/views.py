@@ -145,7 +145,7 @@ class CardDetailsDeleteAPIView(APIView):
 
 
 class ResolveBVN(APIView):  
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
 
     mock = True     
     def get(self, request, bvn=None):
