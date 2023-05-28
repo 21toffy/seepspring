@@ -45,6 +45,7 @@ from common.base_logger import BaseLogger
 logger = BaseLogger('paystack_logger', 'paystack_transactions.log').logger
 
 class VerifyTransactionAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
     def post(self, request):
         data = request.data.get('reference')  # Assuming the reference is sent in the request body
         print(data)
@@ -260,6 +261,7 @@ class InitiatlizePaystackTransactionView(APIView):
 
 
 class CardDetailsAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
     def post(self, request):
         serializer = CardSerializer(data=request.data)
         if serializer.is_valid():
@@ -314,6 +316,7 @@ class CardDetailsAPIView(APIView):
 
 
 class CardChargeAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
     def post(self, request):
         paystack = PaystackHandler()
         card = CardDetails.objects.get(id=request.data.get('card_id'))
