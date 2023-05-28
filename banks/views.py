@@ -60,29 +60,31 @@ class VerifyTransactionAPIView(APIView):
             response = requests.get(url, headers=headers)
             response_data = response.json()
             print("after JSOON", response_data)
-            CardDetails.objects.create(
-                        last4digits=response_data["authorization"]['last4'],
-                        expiry_month=response_data["authorization"]['exp_month'],
-                        expiry_year=response_data["authorization"]['exp_year'],
-                        brand=response_data["authorization"]['brand'],
-                        authorization_code = response_data["authorization"]['authorization_code'],
-                        response_data = response_data,
-                        channel=response_data["authorization"]['channel'],
-                        reusable=response_data["authorization"]['reusable'],
-                        country_code=response_data["authorization"]['country_code'],
-                        card_bank=response_data["authorization"]['bank'],
-                        signature=response_data["authorization"]['signature'],
-                        card_name=response_data["authorization"]['account_name'],
-                        bin=response_data["authorization"]['bin'],
-                        card_type=response_data["authorization"]['card_type'],
-                        user=request.user
-                    )
+            if response_data['status']:
+                CardDetails.objects.create(
+                            last4digits=response_data["authorization"]['last4'],
+                            expiry_month=response_data["authorization"]['exp_month'],
+                            expiry_year=response_data["authorization"]['exp_year'],
+                            brand=response_data["authorization"]['brand'],
+                            authorization_code = response_data["authorization"]['authorization_code'],
+                            response_data = response_data,
+                            channel=response_data["authorization"]['channel'],
+                            reusable=response_data["authorization"]['reusable'],
+                            country_code=response_data["authorization"]['country_code'],
+                            card_bank=response_data["authorization"]['bank'],
+                            signature=response_data["authorization"]['signature'],
+                            card_name=response_data["authorization"]['account_name'],
+                            bin=response_data["authorization"]['bin'],
+                            card_type=response_data["authorization"]['card_type'],
+                            user=request.user
+                        )
 
-            # Do something with the response_data if needed
+                # Do something with the response_data if needed
 
+                return Response(response_data)
             return Response(response_data)
         except Exception as error:
-            logger.error(f"{str(error)}, PAYSTACK")
+            logger.error(f"{str(error)}, PAYSTACK", {request.data}, {response_data if response_data else "could npt get a response"})
             print("ERRORRR", error)
             # Handle the error accordingly
             return Response({'error': str(error), 'message': 'Error verifying transaction'}, status=403)
