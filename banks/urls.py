@@ -5,7 +5,8 @@ from .views import (
     CardDetailsAPIView,
     CardChargeAPIView,
     InitiatlizePaystackTransactionView,
-    PayStackWebHook
+    PayStackWebHook,
+    VerifyTransactionAPIView
 )
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -17,6 +18,5 @@ urlpatterns = [
     path('initialize',InitiatlizePaystackTransactionView.as_view(), name='initialize-transaction'),
     path('charge-card',CardChargeAPIView.as_view(), name='charge_card'),
     path('webhook',PayStackWebHook.as_view(), name='webhook'),
-
-    
+    path('verify-transaction',VerifyTransactionAPIView.as_view(), name='verifi_transaction'),    
 ]

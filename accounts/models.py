@@ -251,11 +251,14 @@ class CardDetails(BaseModel):
     
     is_primary = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
+    # class Meta:
+    #     db_table = 'carddetails'
 
 
 class CardCharge(BaseModel):
     reference = models.CharField(max_length=225, null=True, blank=True)
     card = models.ForeignKey(CardDetails, on_delete=models.CASCADE)
-
+    # class Meta:
+    #     db_table = 'cardcharge'
 
 

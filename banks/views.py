@@ -38,6 +38,55 @@ from django.http import HttpResponseBadRequest
 from accounts.models import CustomUser
 from django.conf import settings
 import requests
+from common.base_logger import BaseLogger
+
+
+
+logger = BaseLogger('paystack_logger', 'paystack_transactions.log').logger
+
+class VerifyTransactionAPIView(APIView):
+    def post(self, request):
+        data = request.data.get('reference')  # Assuming the reference is sent in the request body
+        print(data)
+        url = f"https://api.paystack.co/transaction/verify/{request.data}"
+        headers = {
+            'Accept': 'application/json,text/plain,/',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + settings.PAYSTACK_API_KEY,
+        }
+        print("after header")
+        try:
+            print("tryyyy")
+            response = requests.get(url, headers=headers)
+            response_data = response.json()
+            print("after JSOON", response_data)
+            CardDetails.objects.create(
+                        last4digits=response_data["authorization"]['last4'],
+                        expiry_month=response_data["authorization"]['exp_month'],
+                        expiry_year=response_data["authorization"]['exp_year'],
+                        brand=response_data["authorization"]['brand'],
+                        authorization_code = response_data["authorization"]['authorization_code'],
+                        response_data = response_data,
+                        channel=response_data["authorization"]['channel'],
+                        reusable=response_data["authorization"]['reusable'],
+                        country_code=response_data["authorization"]['country_code'],
+                        card_bank=response_data["authorization"]['bank'],
+                        signature=response_data["authorization"]['signature'],
+                        card_name=response_data["authorization"]['account_name'],
+                        bin=response_data["authorization"]['bin'],
+                        card_type=response_data["authorization"]['card_type'],
+                        user=request.user
+                    )
+
+            # Do something with the response_data if needed
+
+            return Response(response_data)
+        except Exception as error:
+            logger.error(f"{str(error)}, PAYSTACK")
+            print("ERRORRR", error)
+            # Handle the error accordingly
+            return Response({'error': str(error), 'message': 'Error verifying transaction'}, status=403)
+
 
 class InitTransaction(APIView):
     permission_classes = (IsAuthenticated,)
@@ -45,7 +94,6 @@ class InitTransaction(APIView):
     def post(self, request, format=None):
         try:
             email = request.data['email']
-            package_id = request.data['packageId']
             amount = request.data['amount']
             # first_name = package_id
 
